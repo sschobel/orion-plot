@@ -17,7 +17,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 
@@ -66,7 +68,7 @@ public class OrionFrame extends JFrame {
 	private final Action quitAction = new QuitAction();
 	private final Action colorEditorAction = new ShowColorEditorAction();
 	private static Preferences prefs = Preferences.userRoot();
-
+	private ColorIndexTableModel colorAssignmentGridModel;
 
 	/**
 	 * Create the frame.
@@ -106,7 +108,7 @@ public class OrionFrame extends JFrame {
 
 		JProgressBar progressBar = new JProgressBar();
 		final JTable colorAssignmentGrid = new JTable();
-		final ColorIndexTableModel colorAssignmentGridModel = ColorIndexTableModel.createWithColors(orionPlotPanel.getColorMap());
+		colorAssignmentGridModel = ColorIndexTableModel.createWithColors(orionPlotPanel.getColorMap());
 		colorAssignmentGridModel.addTableModelListener(new TableModelListener() {
 			
 			@Override
@@ -262,7 +264,9 @@ public class OrionFrame extends JFrame {
 				StringTokenizer st_comma = new StringTokenizer(tok, ",");
 				while(st_comma.hasMoreTokens()){
 					String comma_tok = st_comma.nextToken();
-					dl.addValueAt(j, Integer.parseInt(comma_tok));
+                    Integer value = Integer.parseInt(comma_tok);
+                     
+					dl.addValueAt(j, value); 
 				}
 			}
 			else{
@@ -435,6 +439,16 @@ public class OrionFrame extends JFrame {
 		DataLine [] matrix = readFileIntoMatrix(file, headers);
 		orionPlotPanel.setPlotMatrix(matrix);
 		orionPlotPanel.setHeaders(headers);
+		Set<Integer> uniqs = new HashSet<Integer>();
+		for(DataLine dl : matrix){
+			for(int i = 0; i < dl.getLength(); ++i){
+				List<Integer> dlv = dl.getValuesAt(i);
+				uniqs.addAll(dlv);
+			}
+		}
+		for(Integer uv : uniqs){
+			colorAssignmentGridModel.addColorIndexIfAbsent(uv, Color.black);
+		}
 		orionPlotPanel.repaint();
 	}
 

@@ -179,6 +179,13 @@ import javax.swing.table.TableModel;
 				int row = _addColorIndex(value, color);
 				_notifyTableModelListeners(new TableModelEvent(this, row));
 			}
+			
+			public void addColorIndexIfAbsent(Integer value, Color color){
+				int idx = indexForValue(value);
+				if(idx < 0){
+					addColorIndex(value, color);
+				}
+			}
 			public void addColorIndexes(Color[] colors){
 				int loRow = colorIndexes.size();
 				int hiRow= 0;
