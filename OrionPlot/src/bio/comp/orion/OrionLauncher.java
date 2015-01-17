@@ -1,4 +1,4 @@
-package bio.comp.orion.ui;
+package bio.comp.orion;
 
 import java.awt.EventQueue;
 import java.io.File;
@@ -8,7 +8,7 @@ import java.util.prefs.Preferences;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import bio.comp.orion.Preference;
+import bio.comp.orion.ui.OrionFrame;
 
 public class OrionLauncher {
 	/**
@@ -44,8 +44,11 @@ public class OrionLauncher {
 					OrionFrame frame = new OrionFrame();
 					frame.setVisible(true);
 					if(Preference.OPEN_PREVIOUS_SESSION_ON_START.getPreference(prefs, Boolean.class).booleanValue()){
-						File file = new File(Preference.PREVIOUS_SESSION_PLOT.getPreference(prefs, String.class));
-						frame.openFile(file);
+						String previousSessionFile = Preference.PREVIOUS_SESSION_PLOT.getPreference(prefs, String.class);
+						if(previousSessionFile != null){
+							File file = new File(previousSessionFile);
+							frame.openFile(file);
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
