@@ -1,4 +1,4 @@
-package bio.comp.orion;
+package bio.comp.orion.model;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package bio.comp.orion;
+package bio.comp.orion.model;
 
 public class Preconditions {
 	public interface Precondition{

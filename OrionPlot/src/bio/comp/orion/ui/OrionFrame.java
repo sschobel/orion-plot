@@ -52,7 +52,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import bio.comp.orion.Preference;
+import bio.comp.orion.model.DataLine;
+import bio.comp.orion.model.Preference;
 
 public class OrionFrame extends JFrame {
 
