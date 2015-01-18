@@ -8,6 +8,7 @@ import java.util.prefs.Preferences;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import bio.comp.orion.model.Preference;
 import bio.comp.orion.ui.OrionFrame;
 
 public class OrionLauncher {

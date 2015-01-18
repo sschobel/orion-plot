@@ -1,4 +1,4 @@
-package bio.comp.orion.ui;
+package bio.comp.orion.model;
 
 import java.awt.Color;
 import java.util.ArrayList;
