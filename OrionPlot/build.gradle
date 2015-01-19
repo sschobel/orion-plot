@@ -1,5 +1,16 @@
 apply plugin: 'java'
 buildDir 'bin'
+sourceCompatibility = 1.6
+version = '0.5'
+
+repositories {
+	mavenCentral()
+}
+dependencies {
+	compile group: 'org.json', name: 'json', version: '20141113'
+	compile fileTree(dir: 'depends', include: '*.jar')
+}
+
 sourceSets {
 	main {
 		java {
@@ -7,6 +18,20 @@ sourceSets {
 		}
 	}
 }
-dependencies {
-	compile fileTree(dir: 'depends', include: '*.jar')
+
+jar {
+	manifest {
+		attributes( 
+			'Implementation-Title': 'Orion Plot',
+			'Implementation-Version': version,
+			'Main-Class' : 'bio.comp.orion.OrionLauncher',
+			'Class-Path' : configurations.runtime.collect { it.getName() }.join(' '))
+	}
 }
+
+task fullJar(type: Copy, dependsOn:jar) {
+	println "jar task $jar.archivePath $jar.destinationDir"
+	from configurations.runtime
+	into jar.destinationDir
+}
+
