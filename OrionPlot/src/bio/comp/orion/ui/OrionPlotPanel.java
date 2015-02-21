@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import bio.comp.orion.model.DataLine;
+import bio.comp.orion.model.MatrixHeaders;
 
 public class OrionPlotPanel extends JPanel implements SubCellFalseColorCoder{
 
@@ -38,8 +39,6 @@ public class OrionPlotPanel extends JPanel implements SubCellFalseColorCoder{
 	public static final String MATRIX_PROPERTY = "matrix";
 	public static final String COLORS_PROPERTY = "colors";
 	public static final String HEADERRS_PROPERTY = "headers";
-	public static final double BLOCK_WIDTH = 20.0;
-	public static final double BLOCK_HEIGHT = 20.0;
 	private static Shape __defaultShape;//  = new Rectangle2D.Double(0, 0, BLOCK_WIDTH, BLOCK_WIDTH);
 	private static Shape __twoValueShapeAlpha;// = new Rectangle2D.Double(0, 0, BLOCK_WIDTH/2, BLOCK_HEIGHT);
 	private static Shape __twoValueShapeBeta;//  = new Rectangle2D.Double(BLOCK_WIDTH/2, 0, BLOCK_WIDTH/2, BLOCK_HEIGHT);
@@ -206,13 +205,13 @@ public class OrionPlotPanel extends JPanel implements SubCellFalseColorCoder{
 		return 1.25;
 	}
 	
-	private double _blockWidth = BLOCK_WIDTH;
+	private double _blockWidth = MatrixHeaders.BLOCK_WIDTH;
 	
 	public double getBlockWidth(){
 		return _blockWidth;
 	}
 	
-	private double _blockHeight = BLOCK_HEIGHT;
+	private double _blockHeight = MatrixHeaders.BLOCK_HEIGHT;
 	
 	public double getBlockHeight(){
 		return _blockHeight;

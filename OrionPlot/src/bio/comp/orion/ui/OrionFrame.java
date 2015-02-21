@@ -9,18 +9,13 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -53,6 +48,8 @@ import javax.swing.event.TableModelListener;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import bio.comp.orion.model.DataLine;
+import bio.comp.orion.model.MatrixReader;
+import bio.comp.orion.model.MatrixReaders;
 import bio.comp.orion.model.Preference;
 
 public class OrionFrame extends JFrame {
@@ -250,51 +247,6 @@ public class OrionFrame extends JFrame {
 
 
 
-	static DataLine readLineIntoMatrix(String line){
-		//System.out.println(String.format("Reading; %s", line));
-		StringTokenizer st = new StringTokenizer(line);
-		int numTokens = st.countTokens();
-		if(numTokens == 0){
-			return null;
-		}
-		DataLine dl = new DataLine(st.nextToken(), numTokens);
-		for(int j = 0; j < numTokens - 1; j++){
-			String tok = st.nextToken();
-			//System.out.println(String.format("i %d of %d", j, numTokens));
-			if(tok != null && !tok.isEmpty()){
-				StringTokenizer st_comma = new StringTokenizer(tok, ",");
-				while(st_comma.hasMoreTokens()){
-					String comma_tok = st_comma.nextToken();
-                    Integer value = Integer.parseInt(comma_tok);
-                     
-					dl.addValueAt(j, value); 
-				}
-			}
-			else{
-				dl.addValueAt(j, -1);
-			}
-		}
-		return dl;
-	}
-
-	static private DataLine[] readLinesIntoMatrix(List<String> lines){
-		DataLine [] matrix = new DataLine[lines.size()];
-		if(!lines.isEmpty()){
-
-			for(int i = 0; i < lines.size(); ++i){
-				matrix[i] = readLineIntoMatrix(lines.get(i));
-
-			}
-		}
-		return matrix;
-	}
-
-	static private String[] tryReadingHeadersInLine(String line){
-		String[] headers = null;
-		return headers;
-	}
-
-
 	static private boolean writeFileWithHeadersAndMatrix(File file, String [] _headers, DataLine[] _matrix){
 		BufferedWriter bw = null;
 		if(file == null){
@@ -326,42 +278,6 @@ public class OrionFrame extends JFrame {
 			}
 		}
 		return false;
-	}
-
-
-	static private DataLine[] readFileIntoMatrix(File file, String [] _headers){
-		ArrayList<String> lines = new ArrayList<String>();
-		BufferedReader br = null;
-		try {
-			FileReader fr = new FileReader(file);
-			br = new BufferedReader(fr);
-			String line = null;
-			while((line = br.readLine()) != null){
-				lines.add(line);
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			if(br != null){
-				try {
-					br.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		String[] headers = tryReadingHeadersInLine(lines.get(0));
-		if(headers != null){
-			lines.remove(0);
-			_headers = headers;
-		}
-		return readLinesIntoMatrix(lines);
-
 	}
 
 
@@ -436,8 +352,9 @@ public class OrionFrame extends JFrame {
 		String startingFolder = file.getParent();
 		Preference.OPEN_FOLDER.setPreference(prefs, startingFolder);
 		Preference.PREVIOUS_SESSION_PLOT.setPreference(prefs, file.getAbsolutePath());
-		String[] headers = null;
-		DataLine [] matrix = readFileIntoMatrix(file, headers);
+		MatrixReader reader = MatrixReaders.readerForFile(file);
+		DataLine [] matrix = reader.getMatrix();
+		String[] headers = reader.getHeaderNames();
 		orionPlotPanel.setPlotMatrix(matrix);
 		orionPlotPanel.setHeaders(headers);
 		Set<Integer> uniqs = new HashSet<Integer>();
