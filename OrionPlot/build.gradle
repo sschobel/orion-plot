@@ -3,12 +3,50 @@ buildDir 'bin'
 sourceCompatibility = 1.6
 version = '0.5'
 
+def batik_artifacts = [
+	'batik-' : [ 
+	'util', 
+	'transcoder',
+	'ext',
+	'awt-util',
+	'bridge',
+	'dom',
+	'svggen',
+	'svg-dom',
+	'gvt',
+	'parser',
+	'codec',
+	'xml',
+	'script',
+	'anim',
+	'js',
+	'rasterizer',
+	'swing',
+	'extension',
+	'gui-util',
+	'ttf2svg',
+	'svgpp' 
+	],
+	]
+
 repositories {
 	mavenCentral()
 }
+
 dependencies {
 	compile group: 'org.json', name: 'json', version: '20141113'
+	compile group: 'xml-apis', name: 'xml-apis', version: '1.0.b2'
+	compile group: 'org.apache.xmlgraphics', name: 'fop', version: '1.1'
+	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
+	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
 	compile fileTree(dir: 'depends', include: '*.jar')
+	batik_artifacts.each() { prefix, suffixes ->
+		suffixes.each() { suffix ->
+			def artname = "$prefix$suffix"
+			println "getting artifact $artname"
+			compile group: 'org.apache.xmlgraphics', name: artname, version: '1.7'
+		}
+	}	
 }
 
 sourceSets {
