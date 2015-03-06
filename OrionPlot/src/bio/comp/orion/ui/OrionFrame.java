@@ -1,6 +1,7 @@
 package bio.comp.orion.ui;
 
 
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -46,6 +47,12 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
+import org.apache.batik.swing.JSVGScrollPane;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.MatrixReader;
@@ -63,6 +70,7 @@ public class OrionFrame extends JFrame {
 	private JFrame colorEditFrame;
 	private final Action action = new OpenFileAction();
 	private final Action imgAction = new SaveAsImageAction();
+	private final Action svgAction = new SaveAsSVGAction();
 	private final Action quitAction = new QuitAction();
 	private final Action colorEditorAction = new ShowColorEditorAction();
 	private static Preferences prefs = Preferences.userRoot();
@@ -71,6 +79,7 @@ public class OrionFrame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
+	@SuppressWarnings("serial")
 	public OrionFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1440, 900);
@@ -82,6 +91,9 @@ public class OrionFrame extends JFrame {
 				}});
 				add(new JMenuItem("Export Image..."){{
 					setAction(imgAction);
+				}});
+				add(new JMenuItem("Export SVG..."){{
+					setAction(svgAction);
 				}});
 				add(new JMenuItem("Quit"){{
 					setAction(quitAction);
@@ -100,8 +112,8 @@ public class OrionFrame extends JFrame {
 
 		JButton button = new JButton("Choose...");
 		button.setAction(action);
-		JScrollPane scroller = new JScrollPane();
-		scroller.setViewportView(orionPlotPanel);
+		JSVGScrollPane scroller = new JSVGScrollPane(orionPlotPanel);
+
 
 
 		JProgressBar progressBar = new JProgressBar();
@@ -312,7 +324,44 @@ public class OrionFrame extends JFrame {
 
 		}
 	}
+	private class SaveAsSVGAction extends AbstractAction{
+		public SaveAsSVGAction() {
+			putValue(NAME, "Save SVG...");
+			putValue(SHORT_DESCRIPTION, "Save the contents of a plot as in SVG");
+		}
 
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			// TODO Auto-generated method stub
+			if(orionPlotPanel.getDocument() == null){
+				return;
+			}
+			String saveSVGParent= Preference.IMG_FOLDER.getPreference(prefs, String.class);
+			JFileChooser jfc = new JFileChooser(saveSVGParent);
+			jfc.setSelectedFile(new File("plot.svg"));
+			int result = jfc.showSaveDialog(OrionFrame.this);
+			if(result == JFileChooser.APPROVE_OPTION){
+				// retrieve image
+				File outputfile = jfc.getSelectedFile();
+				saveSVGParent = outputfile.getParent();
+				Preference.IMG_FOLDER.setPreference(prefs, saveSVGParent);
+				Preference.flush(prefs);
+				try {
+					SVGTranscoder tcoder = new SVGTranscoder();
+					tcoder.transcode(
+							new TranscoderInput(orionPlotPanel.getDocument()), 
+							new TranscoderOutput(new FileWriter(outputfile)));
+				} catch (TranscoderException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+		}
+	}
 
 	private class SaveAsImageAction extends AbstractAction{
 		public SaveAsImageAction() {

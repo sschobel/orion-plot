@@ -9,6 +9,7 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,17 +19,25 @@ import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 
+import org.apache.batik.bridge.TextUtilities;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.dom.util.DOMUtilities;
 import org.apache.batik.script.Window;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.swing.svg.SVGLoadEventDispatcherEvent;
 import org.apache.batik.swing.svg.SVGLoadEventDispatcherListener;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
 import org.apache.batik.util.RunnableQueue;
+import org.apache.fop.svg.SVGUtilities;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
@@ -278,7 +287,7 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	}
 
 	private interface CellIterator {
-		public void iterate(List<Rectangle2D> subcells, List<Integer> values,
+		public void iterate(DataLine sourceLine, int row, int cell, List<Rectangle2D> subcells, List<Integer> values,
 				List<Color> colors);
 	}
 
@@ -313,9 +322,7 @@ public class OrionPlotPanel extends JSVGCanvas implements
 		}
 		return parts;
 	}
-
-	public void overAllCells(CellIterator iter) {
-
+	private AffineTransform getCellTransform(){
 		double w = getBlockWidth(), h = w;
 
 		AffineTransform place = AffineTransform.getScaleInstance(w * 1.25, h * 1.25);
@@ -323,7 +330,10 @@ public class OrionPlotPanel extends JSVGCanvas implements
 				getHorizontalInset(), getVerticalInset());
 		AffineTransform tx = new AffineTransform(offset);
 		tx.concatenate(place);
-		
+		return tx;
+	}
+	public void overAllCells(CellIterator iter) {
+		AffineTransform tx = getCellTransform();
 		Point2D cellOrigin = new Point2D.Double();
 		Point2D txCellOrigin = new Point2D.Double();
 		Rectangle2D cellRect = new Rectangle2D.Double();
@@ -342,7 +352,7 @@ public class OrionPlotPanel extends JSVGCanvas implements
 						ch);
 				List<Rectangle2D> cellRects = splitRectangle(cellRect,
 						cellValues.size());
-				iter.iterate(cellRects, cellValues, cellColors);
+				iter.iterate(line, row_i, cell_j, cellRects, cellValues, cellColors);
 			}
 		}
 	}
@@ -538,7 +548,7 @@ public class OrionPlotPanel extends JSVGCanvas implements
 					});
 		}
 	}
-
+   
 	private void loadSVG() {
 		final String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		updateDocument(new SVGDocumentUpdater() {
@@ -556,34 +566,54 @@ public class OrionPlotPanel extends JSVGCanvas implements
 				}
 				svgRoot.setAttributeNS(null, "width", "1000");
 				svgRoot.setAttributeNS(null, "height", "1000");
-
+				final Element labelG = document.createElementNS(svgNS, "g");
+				labelG.setAttributeNS(null, "id", "labels");
+				svgRoot.appendChild(labelG);
 				forEachLabel(new LabelIterator() {
 					@Override
 					public void iterate(int idx, final Rectangle2D frame,
 							String labelText) {
 						// TODO Auto-generated method stub
-						Element svgRoot = document.getRootElement();
-						Element label = document.createElementNS(svgNS, "rect");
-						label.setAttributeNS(null, "x",
-								Double.toString(frame.getMaxX()));
-						label.setAttributeNS(null, "y",
-								Double.toString(frame.getMinY()));
-						label.setAttributeNS(null, "width", 	Double.toString(100));
-						label.setAttributeNS(null, "height", Double.toString(getBlockHeight()));
+						Element label = SVGUtilities.createText(document, (float)frame.getMaxX(),(float) frame.getCenterY(), labelText);
+						
 						label.setAttributeNS(null, "stroke", "black");
-						label.setAttributeNS(null, "fill", "red");
-						label.setTextContent(labelText);
-						svgRoot.appendChild(label);
 
+						labelG.appendChild(label);
 					}
 				});
+				final Element cellG = document.createElementNS(svgNS, "g");
+				cellG.setAttributeNS(null, "id", "cells");
+				svgRoot.appendChild(cellG);
+				final String[] headers = getHeaders();
+				AffineTransform tx = getCellTransform();
+				Point2D hSrc = new Point2D.Double();
+				Point2D hOrigin = new Point2D.Double();
+				final Element headerG = document.createElementNS(svgNS, "g");
+				svgRoot.appendChild(headerG);
+				for(int i = 0; headers != null && i < headers.length; ++i){
+					hSrc.setLocation(i, 0);
+					tx.transform(hSrc, hOrigin);
+					String header = headers[i];
+					if(header != null){
+						Element label = SVGUtilities.createText(document, (float)hOrigin.getX(), (float)hOrigin.getY(), header);
+						label.setAttributeNS(null, "stroke", "black");
+						headerG.appendChild(label);
+					}
+				}
+
 				overAllCells(new CellIterator() {
 					@Override
-					public void iterate(List<Rectangle2D> cellRects,
-							List<Integer> vals, List<Color> colors) {
+					public void iterate(
+							DataLine 			srcLine, 
+							int 				row, 
+							int 				cell, 
+							List<Rectangle2D> 	cellRects,
+							List<Integer> 		vals, 
+							List<Color> 		colors
+							) {
 						// TODO Auto-generated method stub
 						// TODO Auto-generated method stub
-						Element svgRoot = document.getRootElement();
+
 						for(int i = 0; i < cellRects.size(); ++i){
 							Rectangle2D r = cellRects.get(i);
 							Color rc = (i < colors.size()) ? colors.get(i) : Color.PINK;
@@ -597,20 +627,19 @@ public class OrionPlotPanel extends JSVGCanvas implements
 							String hex = String.format("#%02x%02x%02x", cr, cg, cb);
 							rect.setAttributeNS(null, "fill", hex);
 							rect.setAttributeNS(null, "stroke", "black");
-							svgRoot.appendChild(rect);
-						}
-						for(Rectangle2D r : cellRects){
+							cellG.appendChild(rect);
 						}
 					}
-
 				});
 			}
 		});
-
+		
 	}
 
 	
-
+	public Document getDocument(){
+		return _document;
+	}
 	private void reloadPlot() {
 		loadSVG();
 		Rectangle2D r = calculateComponentBounds();
