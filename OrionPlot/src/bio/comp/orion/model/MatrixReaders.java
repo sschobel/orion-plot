@@ -2,15 +2,18 @@ package bio.comp.orion.model;
 
 import java.awt.Color;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.json.JSONArray;
@@ -18,12 +21,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.sun.tools.javac.code.Attribute.Array;
+
 public class MatrixReaders {
 	
 	
 	private abstract static class BaseMatrixReader implements MatrixReader{
-		private DataLine[] _matrix;
-		private MatrixHeader[] _headers;
+		protected DataLine[] _matrix;
+		protected MatrixHeader[] _headers;
 		protected File _file;
 		protected BaseMatrixReader(File file){
 			_file = file;
@@ -40,7 +45,6 @@ public class MatrixReaders {
 			}
 			return _headers;
 		}
-		@Override
 		public String[] getHeaderNames() {
 			// TODO Auto-generated method stub
 			MatrixHeader[] headers = getHeaders();
@@ -52,8 +56,50 @@ public class MatrixReaders {
 			}
 			return headerNames;
 		}
-		protected abstract DataLine[] initMatrix();
-		protected abstract MatrixHeader[] initHeaders();
+		protected DataLine[] initMatrix(){
+			return null;
+		}
+		protected MatrixHeader[] initHeaders(){
+			return null;
+		}
+		protected Map<Integer, Color> getColorMap(){
+			return null;
+		}
+		
+		protected final Set<Integer> getUniqueValuesAsSet(){
+			HashSet<Integer> uniqs = new HashSet<Integer>();
+			for(DataLine line : getMatrix()){
+				for(List<Integer> entry: line){
+					uniqs.addAll(entry);
+				}
+			}
+			return uniqs;
+		}
+		protected int[] getUniqueValues(){
+			Set<Integer> uniqs = getUniqueValuesAsSet();
+			Iterator<Integer> uiter = uniqs.iterator();
+			int[] vals = new int[uniqs.size()];
+			for(int i = 0; i < vals.length; ++i){
+				vals[i] = uiter.next();
+			}
+			return vals;
+		}
+
+		@Override
+		public OrionModel getModel() {
+			// TODO Auto-generated method stub
+			Map<Integer, Color> map = getColorMap();
+			SubCellFalseColorCoder coder = null;
+			if(map == null){
+				
+				coder = new SubCellFalseColorCoder.UsingDistinctColorsForValues(getUniqueValues());
+			}
+			else{
+				coder = new SubCellFalseColorCoder.UsingColorMap(map);
+			}
+			return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(), coder);
+		}
+
 	}
 	static DataLine readLineIntoMatrix(String line){
 		//System.out.println(String.format("Reading; %s", line));
@@ -139,24 +185,12 @@ public class MatrixReaders {
 		return readLinesIntoMatrix(lines);
 
 	}
-		private DataLine[] _csvMatrix;
-		private MatrixHeader[] _csvHeaders;
+		
 		protected CSVMatrixReader(File file){
 			super(file);
+			_matrix = readFileIntoMatrix(file, _headers);
 		}
-		protected DataLine[] initMatrix(){
-			if(_csvMatrix == null){
-				_csvMatrix = readFileIntoMatrix(_file, _csvHeaders);
-			}
-			return _csvMatrix;
-		}
-		protected MatrixHeader[] initHeaders(){
-			if(_csvHeaders == null){
-				_csvMatrix = readFileIntoMatrix(_file, _csvHeaders);
-			}
-			return _csvHeaders;
-		}
-
+		
 		
 	}
 	
@@ -245,6 +279,11 @@ public class MatrixReaders {
 		}
 		protected MatrixHeader[] initHeaders(){
 			return new MatrixHeader[0];
+		}
+		@Override
+		public OrionModel getModel() {
+			// TODO Auto-generated method stub
+			return new OrionModel.DefaultOrionModel();
 		}
 	}
 	

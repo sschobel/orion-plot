@@ -7,9 +7,9 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -57,7 +59,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.MatrixReader;
 import bio.comp.orion.model.MatrixReaders;
+import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.model.Preference;
+import bio.comp.orion.model.SubCellFalseColorCoder;
 
 public class OrionFrame extends JFrame {
 
@@ -75,12 +79,15 @@ public class OrionFrame extends JFrame {
 	private final Action colorEditorAction = new ShowColorEditorAction();
 	private static Preferences prefs = Preferences.userRoot();
 	private ColorIndexTableModel colorAssignmentGridModel;
+	private SubCellFalseColorCoder colorCoder;
+	private final Logger dlog = Logger.getAnonymousLogger();
 
 	/**
 	 * Create the frame.
 	 */
 	@SuppressWarnings("serial")
 	public OrionFrame() {
+		dlog.setLevel(Level.WARNING);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1440, 900);
 
@@ -118,13 +125,13 @@ public class OrionFrame extends JFrame {
 
 		JProgressBar progressBar = new JProgressBar();
 		final JTable colorAssignmentGrid = new JTable();
-		colorAssignmentGridModel = ColorIndexTableModel.createWithColors(orionPlotPanel.getColorMap());
+		colorAssignmentGridModel = ColorIndexTableModel.createWithColors(SubCellFalseColorCoder.DEFAULT_CODING);
 		colorAssignmentGridModel.addTableModelListener(new TableModelListener() {
 			
 			@Override
 			public void tableChanged(TableModelEvent arg0) {
 				// TODO Auto-generated method stub
-				orionPlotPanel.repaint();
+				orionPlotPanel.reload();
 				
 			}
 		});
@@ -132,18 +139,8 @@ public class OrionFrame extends JFrame {
 		colorAssignmentGrid.setDefaultRenderer(Color.class, colorAssignmentGridModel.createColorCellRenderer(colorAssignmentGrid.getDefaultRenderer(Color.class)));	
 		JScrollPane colorAssignmentTable = new JScrollPane(colorAssignmentGrid);
 		final OrionPlotPanel panel = orionPlotPanel;
-		for(String property : new String[]{ OrionPlotPanel.COLORS_PROPERTY, OrionPlotPanel.MATRIX_PROPERTY}){
-			panel.addPropertyChangeListener(property, new PropertyChangeListener() {
-
-				@Override
-				public void propertyChange(PropertyChangeEvent propEvent) {
-					// TODO Auto-generated method stub
-					System.out.printf("%s changed, invalidating layout \n", propEvent.getPropertyName());
-				}
-			});
-
-		}
-		orionPlotPanel.setColoringDelegate(new SubCellFalseColorCoder() {
+		
+		colorCoder = new SubCellFalseColorCoder() {
 			
 			@Override
 			public Color colorForSubCell(int row, int cell, int subCell,
@@ -154,7 +151,13 @@ public class OrionFrame extends JFrame {
 				return (modelValue != null) ? modelValue : Color.black;
 
 			}
-		});
+
+			@Override
+			public int[] codesForValues() {
+				// TODO Auto-generated method stub
+				return colorAssignmentGridModel.allIndexedValues();
+			}
+		};
 		
 		colorEditFrame = new JFrame("Color Editor");
 		JPanel colorEditPanel = new JPanel(){{
@@ -175,6 +178,20 @@ public class OrionFrame extends JFrame {
 				
 			}
 		});
+
+		colorAssignmentGrid.addMouseListener(new MouseAdapter(){
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getClickCount() == 2 && !OrionFrame.this.colorEditFrame.isVisible()){
+					OrionFrame.this.colorEditFrame.setLocationByPlatform(true);
+					OrionFrame.this.colorEditFrame.setVisible(true);
+				}
+				super.mouseClicked(e);
+			}
+			
+		});
 			colorChooser.getSelectionModel().addChangeListener(new ChangeListener() {
 				
 				@Override
@@ -184,13 +201,13 @@ public class OrionFrame extends JFrame {
 					if(change.getSource() instanceof ColorSelectionModel){
                         ColorSelectionModel model = (ColorSelectionModel) change.getSource();
                         Color selection = model.getSelectedColor();
-                        System.out.printf("%s : selected %s\n", desc, selection);
+                        dlog.fine(String.format("%s : selected %s\n", desc, selection));
                         int selectedRow = colorAssignmentGrid.getSelectedRow();
                         if(selectedRow >= 0){
                         	colorAssignmentGridModel.setValueAt(selection, selectedRow, ColorIndexConstants.COLOR_TABLE_COLUMN);
                         }
 					}
-					System.out.println(desc);
+					dlog.fine(desc);
 				}
 			});
 			add(colorChooser, BorderLayout.CENTER);
@@ -259,21 +276,16 @@ public class OrionFrame extends JFrame {
 
 
 
-	static private boolean writeFileWithHeadersAndMatrix(File file, String [] _headers, DataLine[] _matrix){
+	static private boolean writeFileWithModel(File file, OrionModel model){
 		BufferedWriter bw = null;
 		if(file == null){
 			return false;
 		}
-		if(_headers == null){
-			_headers=new String[0];
-		}
-		if(_matrix == null){
-			_matrix=new DataLine[0];
-		}
+		
 		try {
 			FileWriter fw = new FileWriter(file);
 			bw = new BufferedWriter(fw);
-			for(DataLine line : _matrix){
+			for(DataLine line : model){
 				bw.write(line.toFileString());
 				bw.write('\n');
 			}
@@ -319,7 +331,9 @@ public class OrionFrame extends JFrame {
 				Preference.PREVIOUS_SESSION_PLOT.setPreference(prefs, selectedFile.getAbsolutePath());
 				Preference.SAVE_FOLDER.setPreference(prefs, saveFolderParent);
 				Preference.flush(prefs);
-				writeFileWithHeadersAndMatrix(selectedFile, orionPlotPanel.getHeaders(), orionPlotPanel.getPlotMatrix());
+				if(writeFileWithModel(selectedFile, orionPlotPanel.getModel())){
+					OrionFrame.this.setTitle(selectedFile.getAbsolutePath());
+				}
 			}
 
 		}
@@ -402,12 +416,14 @@ public class OrionFrame extends JFrame {
 		Preference.OPEN_FOLDER.setPreference(prefs, startingFolder);
 		Preference.PREVIOUS_SESSION_PLOT.setPreference(prefs, file.getAbsolutePath());
 		MatrixReader reader = MatrixReaders.readerForFile(file);
-		DataLine [] matrix = reader.getMatrix();
-		String[] headers = reader.getHeaderNames();
-		orionPlotPanel.setPlotMatrix(matrix);
-		orionPlotPanel.setHeaders(headers);
+		OrionModel fileModel = reader.getModel();
+		SubCellFalseColorCoder fileCoder = fileModel.getColorCoder();
+		colorAssignmentGridModel.updateColorIndexesWithCoder(fileCoder);
+		fileModel.setColorCoder(colorCoder);
+		orionPlotPanel.setModel(fileModel);
+		this.setTitle(file.getAbsolutePath());
 		Set<Integer> uniqs = new HashSet<Integer>();
-		for(DataLine dl : matrix){
+		for(DataLine dl : orionPlotPanel.getModel()){
 			for(int i = 0; i < dl.getLength(); ++i){
 				List<Integer> dlv = dl.getValuesAt(i);
 				uniqs.addAll(dlv);

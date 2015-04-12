@@ -45,11 +45,12 @@ import org.w3c.dom.svg.SVGDocument;
 
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.MatrixHeaders;
+import bio.comp.orion.model.OrionModel;
+import bio.comp.orion.model.SubCellFalseColorCoder;
 
 import com.sun.xml.internal.ws.util.xml.NodeListIterator;
 
-public class OrionPlotPanel extends JSVGCanvas implements
-		SubCellFalseColorCoder {
+public class OrionPlotPanel extends JSVGCanvas  {
 	private interface Runner{
 		public void invokeAndWait(Runnable r) throws InterruptedException;
 		public void invokeLater(Runnable r) ;
@@ -60,18 +61,12 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	 * 
 	 */
 	private static final long serialVersionUID = 507178960111041135L;
-	private DataLine[] _matrix;
-	private Color[] _colors;
-	private int _freeColorIdx;
-	private String[] _headers;
 	private List<JLabel> _rowLabels;
-	private Map<Integer, Color> _colorLookup;
-	private SubCellFalseColorCoder _coloringDelegate;
 	private SVGDocument _document;
 	private Window _window;
 	private Runner _runner;
-	private Thread _bootstrapThread;
 
+    private OrionModel _model = new OrionModel.DefaultOrionModel();
 	public static final String MATRIX_PROPERTY = "matrix";
 	public static final String COLORS_PROPERTY = "colors";
 	public static final String HEADERRS_PROPERTY = "headers";
@@ -176,12 +171,8 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	public OrionPlotPanel() {
 		super();
 		_runner = new RunnableRunner();
-		_colors = new Color[] { Color.RED, Color.ORANGE, Color.YELLOW,
-				Color.GREEN, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.PINK,
-				Color.GRAY, Color.DARK_GRAY, Color.BLACK };
-		_freeColorIdx = 0;
+		
 		_rowLabels = new ArrayList<JLabel>();
-		_colorLookup = new HashMap<Integer, Color>();
 		this.setDocumentState(JSVGCanvas.ALWAYS_DYNAMIC);
 		this.addSVGLoadEventDispatcherListener(new SVGLoadEventDispatcherListener() {
 
@@ -254,37 +245,24 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	 * }
 	 */
 
-	@Override
-	public Color colorForSubCell(int row, int cell, int subCell,
-			int subCellValue) {
-		if (_coloringDelegate != null) {
-			return _coloringDelegate.colorForSubCell(row, cell, subCell,
-					subCellValue);
-		} else {
-			return this._colorForSubCell(row, cell, subCell, subCellValue);
-		}
-	}
-
+	
 	private List<Color> colorsForCell(int row, int cell) {
-		ArrayList<Color> colors = new ArrayList<Color>();
-		if (_matrix != null && row < _matrix.length) {
-			DataLine line = _matrix[row];
+			DataLine line = _model.getDataMatrixEntry(row);
+			ArrayList<Color> colors = new ArrayList<Color>();
 			if (line != null) {
 				List<Integer> cellValues = line.getValuesAt(cell);
 				for (int i = 0; cellValues != null && i < cellValues.size(); ++i) {
-					Color subcellColor = colorForSubCell(row, cell, i,
+					Color subcellColor = _model.colorForValue(
 							cellValues.get(i));
 					colors.add(subcellColor != null ? subcellColor : Color.PINK);
 				}
 
 			}
-		}
+	
 		return colors;
 	}
 
-	public void setColoringDelegate(SubCellFalseColorCoder delegate) {
-		_coloringDelegate = delegate;
-	}
+	
 
 	private interface CellIterator {
 		public void iterate(DataLine sourceLine, int row, int cell, List<Rectangle2D> subcells, List<Integer> values,
@@ -339,11 +317,12 @@ public class OrionPlotPanel extends JSVGCanvas implements
 		Rectangle2D cellRect = new Rectangle2D.Double();
 		double cw = getBlockWidth();
 		double ch = getBlockHeight();
-		for (int row_i = 0; _matrix != null && iter != null
-				&& row_i < _matrix.length; row_i++) {
-			DataLine line = _matrix[row_i];
+		int matrixLen = _model.getDataMatrixEntryCount();
+		for (int row_i = 0; iter != null
+				&& row_i < matrixLen; row_i++) {
+			DataLine line = _model.getDataMatrixEntry(row_i);
 			for (int cell_j = 0; iter != null
-					&& cell_j < _matrix[row_i].getLength(); cell_j++) {
+					&& cell_j < line.getLength(); cell_j++) {
 				List<Integer> cellValues = line.getValuesAt(cell_j);
 				List<Color> cellColors = colorsForCell(row_i, cell_j);
 				cellOrigin.setLocation((double) cell_j, (double) row_i);
@@ -423,7 +402,7 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	}
 
 	public Rectangle2D getMatrixBounds(boolean includePadding) {
-		int height = _matrix.length;
+		int height = _model.getDataMatrixEntryCount();
 		int width = 0;
 		double h = (double) height * getPlotElementHeight(includePadding);
 		double w = (double) width * getPlotElementWidth(includePadding);
@@ -433,8 +412,10 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	}
 
 	public int countElementsInRow(int row) {
-		if (row < _matrix.length) {
-			return _matrix[row].getLength();
+		int matrixLen = _model.getDataMatrixEntryCount();
+		if (row < matrixLen) {
+			DataLine matrixRow = _model.getDataMatrixEntry(row);
+			return matrixRow.getLength();
 		} else {
 			return 0;
 		}
@@ -442,7 +423,8 @@ public class OrionPlotPanel extends JSVGCanvas implements
 
 	public int maxCountOfElementsInAllRows() {
 		int maxcount = 0;
-		for (int i = 0; i < _matrix.length; ++i) {
+		int matrixLen = _model.getDataMatrixEntryCount();
+		for (int i = 0; i < matrixLen; ++i) {
 			int rowcount = countElementsInRow(i);
 			maxcount = (maxcount < rowcount) ? rowcount : maxcount;
 		}
@@ -451,7 +433,8 @@ public class OrionPlotPanel extends JSVGCanvas implements
 	}
 
 	public Rectangle2D getRowBounds(int row, boolean uniform_width) {
-		if (row < _matrix.length) {
+		int matrixLen = _model.getDataMatrixEntryCount();
+		if (row < matrixLen) {
 			double x = (double) getHorizontalInset();
 			int colcount = uniform_width ? maxCountOfElementsInAllRows()
 					: countElementsInRow(row);
@@ -485,46 +468,19 @@ public class OrionPlotPanel extends JSVGCanvas implements
 		return bounds;
 	}
 
-	private void removeRowLabelsSwing() {
-		int componentCount = getComponentCount();
-		List<Component> comps = new ArrayList<Component>(componentCount);
-		for (int i = 0; i < componentCount; ++i) {
-			Component c = getComponent(i);
-			comps.add(c);
-		}
-		for (Component c : comps) {
-			remove(c);
-		}
-	}
-
-	private void addRowLabelsSwing(int maxX) {
-		String labelMigLayout = String.format("gapleft %d, wrap, h %d!", maxX
-				+ getLabelGap(),
-				((int) getPlotElementHeight(EXCLUDE_PADDING)) + 1);
-		for (DataLine dl : _matrix) {
-			/*
-			 * for(int i = 0; i < dl.getLength(); ++i){ List<Integer> values =
-			 * dl.getValuesAt(i); Component pointComp =
-			 * componentForMatrixValue(values); add(pointComp); }
-			 */
-			JLabel label = new JLabel(dl.getTitle());
-			label.setForeground(dl.getTitleColor());
-			add(label, labelMigLayout);
-		}
-	}
+	
 
 	private interface LabelIterator {
 		public void iterate(int idx, Rectangle2D frame, String labelText);
 	}
 
 	private void forEachLabel(LabelIterator iter) {
-		for (int i = 0; iter != null && i < _matrix.length; ++i) {
-			iter.iterate(i, getRowBounds(i, true), _matrix[i].getTitle());
+		for (int i = 0; iter != null && i < _model.getDataMatrixEntryCount(); ++i) {
+			iter.iterate(i, getRowBounds(i, true), _model.getDataMatrixEntry(i).getTitle());
 		}
 	}
 
-	private void setupRowLabelsSwing() {
-	}
+
 
 	public interface SVGDocumentUpdater {
 		public void update(SVGDocument document);
@@ -548,7 +504,13 @@ public class OrionPlotPanel extends JSVGCanvas implements
 					});
 		}
 	}
-   
+	private Rectangle2D getLabelBounds(){
+		Rectangle2D matrixBounds = getMatrixBounds();
+		return new Rectangle2D.Double(matrixBounds.getMaxX(), matrixBounds.getMinY(), 400.0, matrixBounds.getHeight());
+	}
+	private Rectangle2D getGraphBounds(){
+		return getMatrixBounds().createUnion(getLabelBounds());
+	}
 	private void loadSVG() {
 		final String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		updateDocument(new SVGDocumentUpdater() {
@@ -564,8 +526,9 @@ public class OrionPlotPanel extends JSVGCanvas implements
 					Node i= (Node)ecIter.next();
 					svgRoot.removeChild(i);
 				}
-				svgRoot.setAttributeNS(null, "width", "1000");
-				svgRoot.setAttributeNS(null, "height", "1000");
+				Rectangle2D graphBounds = OrionPlotPanel.this.getGraphBounds();
+				svgRoot.setAttributeNS(null, "width", Integer.toString((int)graphBounds.getWidth()));
+				svgRoot.setAttributeNS(null, "height", Integer.toString((int)graphBounds.getHeight()));
 				final Element labelG = document.createElementNS(svgNS, "g");
 				labelG.setAttributeNS(null, "id", "labels");
 				svgRoot.appendChild(labelG);
@@ -584,16 +547,16 @@ public class OrionPlotPanel extends JSVGCanvas implements
 				final Element cellG = document.createElementNS(svgNS, "g");
 				cellG.setAttributeNS(null, "id", "cells");
 				svgRoot.appendChild(cellG);
-				final String[] headers = getHeaders();
 				AffineTransform tx = getCellTransform();
 				Point2D hSrc = new Point2D.Double();
 				Point2D hOrigin = new Point2D.Double();
 				final Element headerG = document.createElementNS(svgNS, "g");
 				svgRoot.appendChild(headerG);
-				for(int i = 0; headers != null && i < headers.length; ++i){
+				int numHeaders = _model.getHeaderCount();
+				for(int i = 0; i < numHeaders; ++i){
 					hSrc.setLocation(i, 0);
 					tx.transform(hSrc, hOrigin);
-					String header = headers[i];
+					String header = _model.getHeader(i);
 					if(header != null){
 						Element label = SVGUtilities.createText(document, (float)hOrigin.getX(), (float)hOrigin.getY(), header);
 						label.setAttributeNS(null, "stroke", "black");
@@ -635,61 +598,39 @@ public class OrionPlotPanel extends JSVGCanvas implements
 		});
 		
 	}
-
-	
+	public void reload(){
+		loadSVG();
+	}
 	public Document getDocument(){
 		return _document;
 	}
+/*	
 	private void reloadPlot() {
-		loadSVG();
-		Rectangle2D r = calculateComponentBounds();
-		System.out.format("resizing window to %d %d\n", (int) r.getWidth(),
-				(int) r.getHeight());
-		setPreferredSize(new Dimension((int) r.getWidth(), (int) r.getHeight()));
-		revalidate();
+		           loadSVG();
+		           Rectangle2D r = calculateComponentBounds();
+		           System.out.format("resizing window to %d %d\n", (int) r.getWidth(),
+		                           (int) r.getHeight());
+		           setPreferredSize(new Dimension((int) r.getWidth(), (int) r.getHeight()));       revalidate();
+		   }
+		   */
+
+	public void setModel(OrionModel model){
+		model = model == null ? new OrionModel.DefaultOrionModel() : model;
+		OrionModel _oldModel = _model;
+		_model = model;
+           DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+           String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+           Document doc = impl.createDocument(svgNS, "svg", null);
+           this.setDocument(doc);
+           this.firePropertyChange("matrix", _oldModel.getDataMatrix(), _model.getDataMatrix());;
 	}
 
-	public DataLine[] getPlotMatrix() {
-		return _matrix;
-	}
-
-	public Color[] getColorMap() {
-		return _colors;
-	}
-
-	public String[] getHeaders() {
-		return _headers;
-	}
-
-	public void setPlotMatrix(DataLine[] matrix) {
-		DataLine[] _oldMatrix = _matrix;
-		_matrix = matrix;
-		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
-		Document doc = impl.createDocument(svgNS, "svg", null);
-		this.setDocument(doc);
-		this.firePropertyChange("matrix", _oldMatrix, _matrix);
-
-	}
-
-	public void setColorMap(Color[] colors) {
-		Color[] _oldColors = _colors;
-		_colors = colors;
-		this.firePropertyChange("colors", _oldColors, _colors);
-	}
-
-	public void setHeaders(String[] headers) {
+	public OrionModel getModel() {
 		// TODO Auto-generated method stub
-		String[] _old = _headers;
-		_headers = headers;
-		this.firePropertyChange("headers", _old, _headers);
+		return _model;
 	}
 
-	private Color _colorForSubCell(int row, int cell, int subCell,
-			int subCellValue) {
-		// TODO Auto-generated method stub
-		return 0 <= subCellValue && subCellValue < _colors.length ? _colors[subCellValue]
-				: Color.black;
-	}
+	
 
+	
 }

@@ -17,6 +17,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
+import bio.comp.orion.model.SubCellFalseColorCoder;
+
 class ColorIndexTableModel implements TableModel{
 	class ColorIndex{
 		Integer _idx;
@@ -151,6 +153,14 @@ class ColorIndexTableModel implements TableModel{
 		}
 		return index;
 	}
+	public int[] allIndexedValues(){
+		int [] values = new int[colorIndexes.size()];
+		for(int i = 0; i < values.length; ++i){
+			ColorIndex idx = colorIndexes.get(i);
+			values[i] = idx.getIndex();
+		}
+		return values;
+	}
 	public Color colorForValue(Integer value){
 		Color cv = null;
 		int idx = indexForValue(value);
@@ -175,7 +185,9 @@ class ColorIndexTableModel implements TableModel{
 		int row = _addColorIndex(value, color);
 		_notifyTableModelListeners(new TableModelEvent(this, row));
 	}
-
+    public void removeAllColorIndexes(){
+    	colorIndexes.removeAll(colorIndexes);
+    }
 	public void addColorIndexIfAbsent(Integer value, Color color){
 		int idx = indexForValue(value);
 		if(idx < 0){
@@ -246,5 +258,13 @@ class ColorIndexTableModel implements TableModel{
 	}
 	public TableCellRenderer createColorCellRenderer(TableCellRenderer _default){
 		return new ColorCellRenderer(_default);
+	}
+	public void updateColorIndexesWithCoder(SubCellFalseColorCoder fileCoder) {
+		// TODO Auto-generated method stub
+		this.removeAllColorIndexes();
+		for(int colorIndex : fileCoder.codesForValues()){
+			Color colorValue = fileCoder.colorForSubCell(-1, -1, -1, colorIndex);
+			addColorIndex(colorIndex, colorValue);
+		}
 	}
 };

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 
-public class DataLine{
+public class DataLine implements Iterable<List<Integer>>{
 	
 	public static class DataPoint{
 		public List<Integer> _values;
@@ -127,6 +127,32 @@ public class DataLine{
 	
 	public String toString(){
 		return toFileString();
+	}
+
+	@Override
+	public Iterator<List<Integer>> iterator() {
+		// TODO Auto-generated method stub
+		return new Iterator<List<Integer>>(){
+			int i = 0;
+
+			@Override
+			public boolean hasNext() {
+				// TODO Auto-generated method stub
+				return i < DataLine.this.getLength();
+			}
+
+			@Override
+			public List<Integer> next() {
+				// TODO Auto-generated method stub
+				return DataLine.this.getValuesAt(i++);
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+			
+		};
 	}
 
 	
