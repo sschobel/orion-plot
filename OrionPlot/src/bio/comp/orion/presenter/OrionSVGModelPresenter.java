@@ -8,28 +8,38 @@ import java.util.List;
 
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.apache.fop.svg.SVGUtilities;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.events.Event;
+import org.w3c.dom.events.EventListener;
+import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.svg.SVGDocument;
-
-import com.sun.xml.internal.ws.util.xml.NodeListIterator;
 
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.presenter.OrionModelPresenter.BaseOrionModelPresenter;
 import bio.comp.orion.ui.SVGDocumentUpdater;
-import org.w3c.dom.Element;
-import org.w3c.dom.events.Event;
-import org.w3c.dom.events.EventListener;
-import org.w3c.dom.events.EventTarget;
+
+import com.sun.xml.internal.ws.util.xml.NodeListIterator;
+
 public class OrionSVGModelPresenter extends
 		BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
+	public static Document createEmptySVGDocument() {
+		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
+		Document doc = impl.createDocument(svgNS, "svg", null);
+		return doc;
+	}
 
 	static String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 	public OrionSVGModelPresenter(OrionModel model) {
 		_model = model;
 	}
+
 	protected void registerListeners(SVGDocument _document) {
 		Element elt = _document.getElementById("an-id");
 		EventTarget t = (elt != null) ? (EventTarget) elt : null;
@@ -50,6 +60,7 @@ public class OrionSVGModelPresenter extends
 			}
 		}, false);
 	}
+
 	@Override
 	public void present(final SVGDocument document) {
 		Element svgRoot = document.getDocumentElement();
