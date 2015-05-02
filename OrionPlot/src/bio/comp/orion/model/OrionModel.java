@@ -1,7 +1,6 @@
 package bio.comp.orion.model;
 
 import java.awt.Color;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -47,12 +46,12 @@ public interface OrionModel extends Iterable<DataLine> {
 		
 		@Override
 		public int getDataMatrixEntryCount() {
-			// TODO Auto-generated method stub
+			
 			return _matrix != null ? _matrix.length : 0;
 		}
 		@Override
 		public DataLine getDataMatrixEntry(int idx) {
-			// TODO Auto-generated method stub
+			
 			return _matrix != null && idx < _matrix.length ? 
 					_matrix[idx] : null;
 		}
@@ -61,28 +60,28 @@ public interface OrionModel extends Iterable<DataLine> {
 		}
 		@Override
 		public Color colorForValue(int value) {
-			// TODO Auto-generated method stub
+			
 			return colorForValue(-1,-1,-1,value);
 		}
 		@Override
 		public int getHeaderCount() {
-			// TODO Auto-generated method stub
+			
 			return _headers != null ? _headers.length : 0;
 		}
 		@Override
 		public String getHeader(int index) {
-			// TODO Auto-generated method stub
+			
 			return _headers != null && index < _headers.length ? _headers[index].getLineName() : "";
 		}
 		@Override
 		public Color colorForValue(int matrixIndex, int cellIndex,
 				int subIndex, int value) {
-			// TODO Auto-generated method stub
+			
 			return _colorLookup != null ? _colorLookup.colorForSubCell(matrixIndex, cellIndex, subIndex, value) : Color.black;
 		}
 		@Override
 		public Iterator<DataLine> iterator() {
-			// TODO Auto-generated method stub
+			
 			return new Iterator<DataLine>(){
 				private int current;
 				{
@@ -91,20 +90,20 @@ public interface OrionModel extends Iterable<DataLine> {
 
 				@Override
 				public boolean hasNext() {
-					// TODO Auto-generated method stub
+					
 					return _matrix != null && current < _matrix.length;
 				}
 
 				@Override
 				public DataLine next() {
-					// TODO Auto-generated method stub
+					
 					DataLine line = hasNext() ? _matrix[current++] : null;
 					return line;
 				}
 
 				@Override
 				public void remove() {
-					// TODO Auto-generated method stub
+					
 					throw new UnsupportedOperationException();
 				}
 				
@@ -112,12 +111,12 @@ public interface OrionModel extends Iterable<DataLine> {
 		}
 		@Override
 		public SubCellFalseColorCoder getColorCoder() {
-			// TODO Auto-generated method stub
+			
 			return _colorLookup;
 		}
 		@Override
 		public void setColorCoder(SubCellFalseColorCoder colorCoder) {
-			// TODO Auto-generated method stub
+			
 			_colorLookup = colorCoder;
 		}
 	}

@@ -3,7 +3,6 @@ package bio.comp.orion.model;
 import java.awt.Color;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 public final class Colors {
@@ -18,7 +17,7 @@ public final class Colors {
 
 			@Override
 			public Color parseFrom(Object anObj) {
-				// TODO Auto-generated method stub
+				
 				StringTokenizer st = new StringTokenizer((String)anObj, ",");
 				float[] comps = new float[4];
 				for (int i = 0; i < comps.length; i++) {

@@ -47,7 +47,7 @@ public class OrionSVGModelPresenter extends
 
 			@Override
 			public void handleEvent(Event evt) {
-				// TODO Auto-generated method stub
+				
 				System.out.format("handleEvent/%s/(%s)", "SVGLoad", evt);
 			}
 		}, false);
@@ -55,7 +55,7 @@ public class OrionSVGModelPresenter extends
 
 			@Override
 			public void handleEvent(Event evt) {
-				// TODO Auto-generated method stub
+				
 				System.out.format("handleEvent/%s/(%s)", "click", evt);
 			}
 		}, false);
@@ -83,7 +83,7 @@ public class OrionSVGModelPresenter extends
 			@Override
 			public void iterate(int idx, final Rectangle2D frame,
 					String labelText) {
-				// TODO Auto-generated method stub
+				
 				Element label = SVGUtilities.createText(document,
 						(float) frame.getMaxX(), (float) frame.getCenterY(),
 						labelText);
@@ -119,8 +119,6 @@ public class OrionSVGModelPresenter extends
 			public void iterate(DataLine srcLine, int row, int cell,
 					List<Rectangle2D> cellRects, List<Integer> vals,
 					List<Color> colors) {
-				// TODO Auto-generated method stub
-				// TODO Auto-generated method stub
 
 				for (int i = 0; i < cellRects.size(); ++i) {
 					Rectangle2D r = cellRects.get(i);
@@ -146,7 +144,6 @@ public class OrionSVGModelPresenter extends
 
 	@Override
 	public void update(SVGDocument document) {
-		// TODO Auto-generated method stub
 		present(document);
 	}
 

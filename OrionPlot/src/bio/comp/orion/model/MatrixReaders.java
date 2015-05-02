@@ -7,8 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +19,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import com.sun.tools.javac.code.Attribute.Array;
 
 public class MatrixReaders {
 	
@@ -46,7 +43,7 @@ public class MatrixReaders {
 			return _headers;
 		}
 		public String[] getHeaderNames() {
-			// TODO Auto-generated method stub
+			
 			MatrixHeader[] headers = getHeaders();
 			
 			int length = (headers != null) ? headers.length : 0;
@@ -87,7 +84,7 @@ public class MatrixReaders {
 
 		@Override
 		public OrionModel getModel() {
-			// TODO Auto-generated method stub
+			
 			Map<Integer, Color> map = getColorMap();
 			SubCellFalseColorCoder coder = null;
 			if(map == null){
@@ -282,7 +279,7 @@ public class MatrixReaders {
 		}
 		@Override
 		public OrionModel getModel() {
-			// TODO Auto-generated method stub
+			
 			return new OrionModel.DefaultOrionModel();
 		}
 	}

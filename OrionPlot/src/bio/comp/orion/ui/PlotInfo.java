@@ -34,69 +34,69 @@ public class PlotInfo {
 		
 		@Override
 		public boolean contains(Point2D arg0) {
-			// TODO Auto-generated method stub
+			
 			return _shape.contains(arg0);
 		}
 
 		@Override
 		public boolean contains(Rectangle2D arg0) {
-			// TODO Auto-generated method stub
+			
 			return _shape.contains(arg0);
 		}
 
 		@Override
 		public boolean contains(double x, double y) {
-			// TODO Auto-generated method stub
+			
 			return _shape.contains(x, y);
 		}
 
 		@Override
 		public boolean contains(double x, double y, double w,
 				double h) {
-			// TODO Auto-generated method stub
+			
 			return _shape.contains(x, y, w, h);
 		}
 
 		@Override
 		public Rectangle getBounds() {
-			// TODO Auto-generated method stub
+			
 			return _shape.getBounds();
 		}
 
 		@Override
 		public Rectangle2D getBounds2D() {
-			// TODO Auto-generated method stub
+			
 			return _shape.getBounds2D();
 		}
 
 		@Override
 		public PathIterator getPathIterator(AffineTransform at) {
-			// TODO Auto-generated method stub
+			
 			return _shape.getPathIterator(at);
 		}
 
 		@Override
 		public PathIterator getPathIterator(AffineTransform at, double flatness) {
-			// TODO Auto-generated method stub
+			
 			return _shape.getPathIterator(at, flatness);
 		}
 
 		@Override
 		public boolean intersects(Rectangle2D test) {
-			// TODO Auto-generated method stub
+			
 			return _shape.intersects(test);
 		}
 
 		@Override
 		public boolean intersects(double x, double y, double w,
 				double h) {
-			// TODO Auto-generated method stub
+			
 			return _shape.intersects(x, y, w, h);
 		}
 
 		@Override
 		public void draw(Graphics2D g2) {
-			// TODO Auto-generated method stub
+			
 			Color oldColor = g2.getColor();
 			g2.setColor(_color);
 			g2.draw(_shape);
@@ -129,51 +129,54 @@ public class PlotInfo {
 		
 		@Override
 		public boolean contains(Point2D p) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().contains(p);
 		}
 
 		@Override
 		public boolean contains(Rectangle2D r) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().contains(r.getX(), r.getY(), r.getWidth(), r.getHeight() );
 		}
 
 		@Override
 		public boolean contains(double x, double y) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().contains(x, y);
 		}
 
 		@Override
 		public boolean contains(double x, double y, double w, double h) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().contains(x, y, w, h);
 		}
 
 		@Override
 		public Rectangle getBounds() {
-			// TODO Auto-generated method stub
+			
 			Rectangle2D _r2d2 = calculateBounds();
 			return new Rectangle( (int)_r2d2.getX(), (int)_r2d2.getY(), (int)_r2d2.getWidth(), (int)_r2d2.getHeight());
 		}
 
 		@Override
 		public Rectangle2D getBounds2D() {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds();
 		}
 
 		@Override
 		public PathIterator getPathIterator(AffineTransform at) {
-			// TODO Auto-generated method stub
+			
 			return null;
 		}
 
 		private class ComplexPathIterator implements PathIterator{
 
+			@SuppressWarnings("unused")
 			final private PlotShape[] _itershapes;
+			@SuppressWarnings("unused")
 			int idx = 0;
+			@SuppressWarnings("unused")
 			PathIterator current = null;
 			
 			public ComplexPathIterator(PlotShape[] shapes){
@@ -183,31 +186,31 @@ public class PlotInfo {
 			
 			@Override
 			public int currentSegment(float[] coords) {
-				// TODO Auto-generated method stub
+				
 				return 0;
 			}
 
 			@Override
 			public int currentSegment(double[] coords) {
-				// TODO Auto-generated method stub
+				
 				return 0;
 			}
 
 			@Override
 			public int getWindingRule() {
-				// TODO Auto-generated method stub
+				
 				return 0;
 			}
 
 			@Override
 			public boolean isDone() {
-				// TODO Auto-generated method stub
+				
 				return false;
 			}
 
 			@Override
 			public void next() {
-				// TODO Auto-generated method stub
+				
 				
 			}
 			
@@ -215,25 +218,25 @@ public class PlotInfo {
 		
 		@Override
 		public PathIterator getPathIterator(AffineTransform at, double flatness) {
-			// TODO Auto-generated method stub
+			
 			return new ComplexPathIterator(_shapes);
 		}
 
 		@Override
 		public boolean intersects(Rectangle2D r) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().intersects(r);
 		}
 
 		@Override
 		public boolean intersects(double x, double y, double w, double h) {
-			// TODO Auto-generated method stub
+			
 			return calculateBounds().intersects(x, y, w, h);
 		}
 
 		@Override
 		public void draw(Graphics2D g2) {
-			// TODO Auto-generated method stub
+			
 			for(PlotShape shape : _children){
 				shape.draw(g2);
 			}
@@ -241,7 +244,6 @@ public class PlotInfo {
 		
 	}
 	
-	private int[][] _plot;
 	private PlotShape[] _shapes;
 	
 	

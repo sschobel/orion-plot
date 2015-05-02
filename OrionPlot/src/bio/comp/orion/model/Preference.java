@@ -18,6 +18,7 @@ public enum Preference{
 	private abstract static class Accessor<T>{
 		public <RT> RT get(Preferences prefs, Preference key, Class<RT>returnType){
 			if(Preconditions.notNull(prefs, key, returnType).met()){
+				@SuppressWarnings("unchecked")
 				T default1 = (T) key.getDefault(returnType);
 				T val = doGet(prefs, key.getKey(), default1);
 				if(val != null){
@@ -44,13 +45,13 @@ public enum Preference{
 
 				@Override
 				public String doGet(Preferences prefs, String key, String def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.get(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, String value) {
-					// TODO Auto-generated method stub
+					
 					prefs.put(key, value);
 					
 				}
@@ -59,13 +60,13 @@ public enum Preference{
 
 				@Override
 				public Float doGet(Preferences prefs, String key, Float def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getFloat(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, Float value) {
-					// TODO Auto-generated method stub
+					
 					prefs.putFloat(key, value);
 				}
 				
@@ -74,13 +75,13 @@ public enum Preference{
 
 				@Override
 				public Double doGet(Preferences prefs, String key, Double def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getDouble(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, Double value) {
-					// TODO Auto-generated method stub
+					
 					
 				}
 				
@@ -89,13 +90,13 @@ public enum Preference{
 
 				@Override
 				public Integer doGet(Preferences prefs, String key, Integer def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getInt(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, Integer value) {
-					// TODO Auto-generated method stub
+					
 					prefs.putInt(key, value);
 				}
 
@@ -104,13 +105,13 @@ public enum Preference{
 
 				@Override
 				public Long doGet(Preferences prefs, String key, Long def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getLong(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, Long value) {
-					// TODO Auto-generated method stub
+					
 					prefs.putLong(key, value);
 				}
 
@@ -120,13 +121,13 @@ public enum Preference{
 
 				@Override
 				public Boolean doGet(Preferences prefs, String key, Boolean def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getBoolean(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, Boolean value) {
-					// TODO Auto-generated method stub
+					
 					prefs.putBoolean(key, value);
 				}
 
@@ -136,13 +137,13 @@ public enum Preference{
 
 				@Override
 				public byte[] doGet(Preferences prefs, String key, byte[] def) {
-					// TODO Auto-generated method stub
+					
 					return prefs.getByteArray(key, def);
 				}
 
 				@Override
 				public void doSet(Preferences prefs, String key, byte[] value) {
-					// TODO Auto-generated method stub
+					
 					prefs.putByteArray(key, value);
 				}
 
@@ -177,6 +178,7 @@ public enum Preference{
 		return _type;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T getPreference(Preferences prefs, Class<T> ofType){
 		if(ofType == null){
 			ofType = ((Class<T>) _type);
@@ -206,6 +208,7 @@ public enum Preference{
 				prefs.remove(getKey());
 			}
 			else{
+				@SuppressWarnings("unchecked")
 				Accessor<T>accessor = (Accessor<T>) PREFERENCE_ACCESSORS.get(tvalue.getClass());
 				if(accessor != null){
 					accessor.set(prefs, this, tvalue);

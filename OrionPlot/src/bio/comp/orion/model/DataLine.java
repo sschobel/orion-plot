@@ -2,7 +2,6 @@ package bio.comp.orion.model;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -108,7 +107,7 @@ public class DataLine implements Iterable<List<Integer>>{
 	}
 	
 	public int getLength() {
-		// TODO Auto-generated method stub
+		
 		return _data != null ? _data.size() : 0;
 	}
 	
@@ -131,19 +130,19 @@ public class DataLine implements Iterable<List<Integer>>{
 
 	@Override
 	public Iterator<List<Integer>> iterator() {
-		// TODO Auto-generated method stub
+		
 		return new Iterator<List<Integer>>(){
 			int i = 0;
 
 			@Override
 			public boolean hasNext() {
-				// TODO Auto-generated method stub
+				
 				return i < DataLine.this.getLength();
 			}
 
 			@Override
 			public List<Integer> next() {
-				// TODO Auto-generated method stub
+				
 				return DataLine.this.getValuesAt(i++);
 			}
 
