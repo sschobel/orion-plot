@@ -27,11 +27,11 @@ import com.sun.xml.internal.ws.util.xml.NodeListIterator;
 
 public class OrionSVGModelPresenter extends
 		BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
-	public static Document createEmptySVGDocument() {
+	public static SVGDocument createEmptySVGDocument() {
 		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
 		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		Document doc = impl.createDocument(svgNS, "svg", null);
-		return doc;
+		return (SVGDocument)doc;
 	}
 
 	static String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;

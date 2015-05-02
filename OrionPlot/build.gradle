@@ -39,6 +39,7 @@ dependencies {
 	compile group: 'org.apache.xmlgraphics', name: 'fop', version: '1.1'
 	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-api', version: '4.3.1'
 	compile group: 'org.apache.avalon.framework', name: 'avalon-framework-impl', version: '4.3.1'
+	compile group: 'com.google.guava', name: 'guava', version: '18.0'
 	compile fileTree(dir: 'depends', include: '*.jar')
 	batik_artifacts.each() { prefix, suffixes ->
 		suffixes.each() { suffix ->

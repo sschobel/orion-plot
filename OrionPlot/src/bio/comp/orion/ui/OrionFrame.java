@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
@@ -362,9 +363,10 @@ public class OrionFrame extends JFrame {
 				Preference.flush(prefs);
 				try {
 					SVGTranscoder tcoder = new SVGTranscoder();
+				
 					tcoder.transcode(
 							new TranscoderInput(orionPlotPanel.getDocument()), 
-							new TranscoderOutput(new FileWriter(outputfile)));
+							new TranscoderOutput(new FileOutputStream(outputfile)));
 				} catch (TranscoderException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

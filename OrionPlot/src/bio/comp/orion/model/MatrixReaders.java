@@ -286,7 +286,10 @@ public class MatrixReaders {
 			return new OrionModel.DefaultOrionModel();
 		}
 	}
-	
+
+	public static final MatrixReader readerForFile(String filePath){
+		return readerForFile(new File(filePath));
+	}
 	public static final MatrixReader readerForFile(File file){
 		String path = file.getAbsolutePath();
 		if(path.endsWith(".csv")){
