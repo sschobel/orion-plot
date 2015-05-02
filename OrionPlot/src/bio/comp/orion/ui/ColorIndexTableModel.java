@@ -49,38 +49,38 @@ class ColorIndexTableModel implements TableModel{
 	}
 	@Override
 	public void addTableModelListener(TableModelListener listener) {
-		// TODO Auto-generated method stub
+		
 		listeners.add(listener);
 	}
 
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		// TODO Auto-generated method stub
+		
 
 		return (ColorIndexConstants.TABLE_COLUMN_CLASSES.length > columnIndex) ? ColorIndexConstants.TABLE_COLUMN_CLASSES[columnIndex] : String.class;
 	}
 
 	@Override
 	public int getColumnCount() {
-		// TODO Auto-generated method stub
+		
 		return ColorIndexConstants.TABLE_COLUMN_NAMES.length;
 	}
 
 	@Override
 	public String getColumnName(int columnIndex) {
-		// TODO Auto-generated method stub
+		
 		return ColorIndexConstants.TABLE_COLUMN_NAMES[columnIndex];
 	}
 
 	@Override
 	public int getRowCount() {
-		// TODO Auto-generated method stub
+		
 		return colorIndexes.size();
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
+		
 		Object value = null;
 		if(colorIndexes.size() > rowIndex){
 			ColorIndex colorIdx = colorIndexes.get(rowIndex);
@@ -102,13 +102,13 @@ class ColorIndexTableModel implements TableModel{
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
+		
 		return (ColorIndexConstants.COLOR_TABLE_COLUMN == columnIndex);
 	}
 
 	@Override
 	public void removeTableModelListener(TableModelListener listener) {
-		// TODO Auto-generated method stub
+		
 		listeners.remove(listener);
 	}
 
@@ -122,7 +122,7 @@ class ColorIndexTableModel implements TableModel{
 	}
 	@Override
 	public void setValueAt(Object value, int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
+		
 		ColorIndex oldValue = (colorIndexes.size() > rowIndex) ? colorIndexes.get(rowIndex) : null;
 		ColorIndex newValue = null;
 		switch (columnIndex) {
@@ -208,6 +208,10 @@ class ColorIndexTableModel implements TableModel{
 		}
 	}
 	class OColorWell extends JPanel{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6109784308860333251L;
 		private Color _wellColor;	
 		OColorWell(Color wellColor){
 			_wellColor = wellColor;
@@ -238,7 +242,7 @@ class ColorIndexTableModel implements TableModel{
 		public Component getTableCellRendererComponent(JTable table,
 				Object value, boolean isSelected, boolean hasFocus,
 				int row, int column) {
-			// TODO Auto-generated method stub
+			
 			Component comp;
 			if(value instanceof Color){
 				Color color = (Color) value;
@@ -260,7 +264,7 @@ class ColorIndexTableModel implements TableModel{
 		return new ColorCellRenderer(_default);
 	}
 	public void updateColorIndexesWithCoder(SubCellFalseColorCoder fileCoder) {
-		// TODO Auto-generated method stub
+		
 		this.removeAllColorIndexes();
 		for(int colorIndex : fileCoder.codesForValues()){
 			Color colorValue = fileCoder.colorForSubCell(-1, -1, -1, colorIndex);

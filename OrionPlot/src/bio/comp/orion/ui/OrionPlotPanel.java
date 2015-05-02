@@ -44,7 +44,7 @@ public class OrionPlotPanel extends JSVGCanvas {
 
 		@Override
 		public void invokeAndWait(Runnable r) throws InterruptedException {
-			// TODO Auto-generated method stub
+			
 			try {
 				SwingUtilities.invokeAndWait(r);
 			} catch (InvocationTargetException e) {
@@ -56,7 +56,7 @@ public class OrionPlotPanel extends JSVGCanvas {
 
 		@Override
 		public void invokeLater(Runnable r) {
-			// TODO Auto-generated method stub
+			
 			SwingUtilities.invokeLater(r);
 
 		}
@@ -73,7 +73,7 @@ public class OrionPlotPanel extends JSVGCanvas {
 			@Override
 			public void svgLoadEventDispatchStarted(
 					SVGLoadEventDispatcherEvent e) {
-				// TODO Auto-generated method stub
+				
 				_document = OrionPlotPanel.this.getSVGDocument();
 				_runner = new Runner() {
 					RunnableQueue batikrunner = OrionPlotPanel.this
@@ -82,13 +82,13 @@ public class OrionPlotPanel extends JSVGCanvas {
 					@Override
 					public void invokeAndWait(Runnable r)
 							throws InterruptedException {
-						// TODO Auto-generated method stub
+						
 						batikrunner.invokeAndWait(r);
 					}
 
 					@Override
 					public void invokeLater(Runnable r) {
-						// TODO Auto-generated method stub
+						
 						batikrunner.invokeLater(r);
 
 					}
@@ -99,21 +99,21 @@ public class OrionPlotPanel extends JSVGCanvas {
 
 			@Override
 			public void svgLoadEventDispatchFailed(SVGLoadEventDispatcherEvent e) {
-				// TODO Auto-generated method stub
+				
 
 			}
 
 			@Override
 			public void svgLoadEventDispatchCompleted(
 					SVGLoadEventDispatcherEvent e) {
-				// TODO Auto-generated method stub
+				
 
 			}
 
 			@Override
 			public void svgLoadEventDispatchCancelled(
 					SVGLoadEventDispatcherEvent e) {
-				// TODO Auto-generated method stub
+				
 
 			}
 		});
@@ -134,7 +134,7 @@ public class OrionPlotPanel extends JSVGCanvas {
 
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
+					
 					updater.update(_document);
 
 				}
@@ -171,7 +171,7 @@ public class OrionPlotPanel extends JSVGCanvas {
 	}
 
 	public OrionModel getModel() {
-		// TODO Auto-generated method stub
+		
 		return _model;
 	}
 

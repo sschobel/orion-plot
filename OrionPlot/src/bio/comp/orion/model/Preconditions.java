@@ -7,6 +7,10 @@ public class Preconditions {
 		public void enforce(); //Throws RuntimeException if notMet() returns true;
 	}
 	static class PreconditionUnmetException extends RuntimeException{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 106659409943150608L;
 		Precondition _unmet;
 		public PreconditionUnmetException(Precondition unmet) {
 			// TODO Auto-generated constructor stub
@@ -20,7 +24,7 @@ public class Preconditions {
 
 		@Override
 		public boolean notMet() {
-			// TODO Auto-generated method stub
+			
 			return !met();
 		}
 		
@@ -39,7 +43,7 @@ public class Preconditions {
 		}
 		@Override
 		public boolean met() {
-			// TODO Auto-generated method stub
+			
 			for(Object obj : _objects){
 				if(obj == null){
 					return false;
@@ -60,7 +64,7 @@ public class Preconditions {
 
 		@Override
 		public boolean met() {
-			// TODO Auto-generated method stub
+			
 			return _precon.notMet();
 		}
 	}
@@ -68,7 +72,7 @@ public class Preconditions {
 
 		@Override
 		public boolean met() {
-			// TODO Auto-generated method stub
+			
 			return true;
 		}
 		
@@ -77,7 +81,7 @@ public class Preconditions {
 
 		@Override
 		public boolean met() {
-			// TODO Auto-generated method stub
+			
 			return false;
 		}
 		

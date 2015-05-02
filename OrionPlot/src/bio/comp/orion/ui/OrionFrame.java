@@ -131,7 +131,7 @@ public class OrionFrame extends JFrame {
 			
 			@Override
 			public void tableChanged(TableModelEvent arg0) {
-				// TODO Auto-generated method stub
+				
 				orionPlotPanel.reload();
 				
 			}
@@ -139,14 +139,13 @@ public class OrionFrame extends JFrame {
 		colorAssignmentGrid.setModel(colorAssignmentGridModel);
 		colorAssignmentGrid.setDefaultRenderer(Color.class, colorAssignmentGridModel.createColorCellRenderer(colorAssignmentGrid.getDefaultRenderer(Color.class)));	
 		JScrollPane colorAssignmentTable = new JScrollPane(colorAssignmentGrid);
-		final OrionPlotPanel panel = orionPlotPanel;
 		
 		colorCoder = new SubCellFalseColorCoder() {
 			
 			@Override
 			public Color colorForSubCell(int row, int cell, int subCell,
 					int subCellValue) {
-				// TODO Auto-generated method stub
+				
 				Color modelValue = colorAssignmentGridModel.colorForValue(subCellValue);
 
 				return (modelValue != null) ? modelValue : Color.black;
@@ -155,14 +154,13 @@ public class OrionFrame extends JFrame {
 
 			@Override
 			public int[] codesForValues() {
-				// TODO Auto-generated method stub
+				
 				return colorAssignmentGridModel.allIndexedValues();
 			}
 		};
 		
 		colorEditFrame = new JFrame("Color Editor");
 		JPanel colorEditPanel = new JPanel(){{
-			final JPanel _colorEditThis=this;
 			setLayout(new BorderLayout());
 			final JColorChooser colorChooser = new JColorChooser(){{
 				
@@ -171,7 +169,7 @@ public class OrionFrame extends JFrame {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent arg0) {
-				// TODO Auto-generated method stub
+				
 				int sel = colorAssignmentGrid.getSelectedRow();
 				
 				Color clr = (Color) colorAssignmentGridModel.getValueAt(sel, ColorIndexConstants.COLOR_TABLE_COLUMN);
@@ -184,7 +182,7 @@ public class OrionFrame extends JFrame {
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				// TODO Auto-generated method stub
+				
 				if (e.getClickCount() == 2 && !OrionFrame.this.colorEditFrame.isVisible()){
 					OrionFrame.this.colorEditFrame.setLocationByPlatform(true);
 					OrionFrame.this.colorEditFrame.setVisible(true);
@@ -197,7 +195,7 @@ public class OrionFrame extends JFrame {
 				
 				@Override
 				public void stateChanged(ChangeEvent change) {
-					// TODO Auto-generated method stub
+					
 					String desc = String.format("ColorSelect change event %s", change);
 					if(change.getSource() instanceof ColorSelectionModel){
                         ColorSelectionModel model = (ColorSelectionModel) change.getSource();
@@ -223,7 +221,7 @@ public class OrionFrame extends JFrame {
 
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						// TODO Auto-generated method stub
+						
 						colorEditFrame.setVisible(false);
 
 					}
@@ -319,7 +317,7 @@ public class OrionFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			if(true)
 				throw new NotImplementedException();
 			String saveFolderParent = Preference.SAVE_FOLDER.getPreference(prefs, String.class);
@@ -340,6 +338,11 @@ public class OrionFrame extends JFrame {
 		}
 	}
 	private class SaveAsSVGAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4863281097460392446L;
+
 		public SaveAsSVGAction() {
 			putValue(NAME, "Save SVG...");
 			putValue(SHORT_DESCRIPTION, "Save the contents of a plot as in SVG");
@@ -347,7 +350,7 @@ public class OrionFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			if(orionPlotPanel.getDocument() == null){
 				return;
 			}
@@ -380,6 +383,11 @@ public class OrionFrame extends JFrame {
 	}
 
 	private class SaveAsImageAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2087972127204740192L;
+
 		public SaveAsImageAction() {
 			putValue(NAME, "Save Image...");
 			putValue(SHORT_DESCRIPTION, "Save the contents of a plot as an image");
@@ -387,7 +395,7 @@ public class OrionFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			String saveImageParent = Preference.IMG_FOLDER.getPreference(prefs, String.class);
 			JFileChooser jfc = new JFileChooser(saveImageParent);
 			jfc.setSelectedFile(new File("image.png"));
@@ -438,6 +446,10 @@ public class OrionFrame extends JFrame {
 	}
 
 	private class OpenFileAction extends AbstractAction {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1588733846805195076L;
 		public OpenFileAction() {
 			putValue(NAME, "Open...");
 			putValue(SHORT_DESCRIPTION, "Opens a plot file");
@@ -464,19 +476,27 @@ public class OrionFrame extends JFrame {
 	}
 
 	private class ShowColorEditorAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -6574490632860865353L;
 		public ShowColorEditorAction(){
 			putValue(NAME, "Edit Colors...");
 			putValue(SHORT_DESCRIPTION, "Modify colors used in the plot");
 		}
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			colorEditFrame.setVisible(true);
 		}
 
 	}
 
 	private class QuitAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -8519611749851752846L;
 		public QuitAction(){
 			putValue(NAME, "Quit");
 			putValue(SHORT_DESCRIPTION, "Exits this application");

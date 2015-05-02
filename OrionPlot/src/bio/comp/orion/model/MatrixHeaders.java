@@ -19,27 +19,27 @@ public class MatrixHeaders {
 		}
 		@Override
 		public String getLineName() {
-			// TODO Auto-generated method stub
+			
 			return _name;
 		}
 		@Override
 		public Color getLineColor(Color defaultColor) {
-			// TODO Auto-generated method stub
+			
 			return (_color != null) ? _color : defaultColor;
 		}
 		@Override
 		public Double getLineWidth(Double defaultWidth) {
-			// TODO Auto-generated method stub
+			
 			return (_width != null) ? _width : defaultWidth;
 		}
 		@Override
 		public Color getLineColor() {
-			// TODO Auto-generated method stub
+			
 			return getLineColor(null);
 		}
 		@Override
 		public Double getLineWidth() {
-			// TODO Auto-generated method stub
+			
 			return getLineWidth(null);
 		}
 	}

@@ -27,13 +27,13 @@ public interface SubCellFalseColorCoder{
 		@Override
 		public Color colorForSubCell(int row, int cell, int subCell,
 				int subCellValue) {
-			// TODO Auto-generated method stub
+			
 			Integer sval = subCellValue;
 			return _lookup != null && _lookup.containsKey(sval) ? _lookup.get(sval) : Color.black;
 		}
 		@Override
 		public int[] codesForValues() {
-			// TODO Auto-generated method stub
+			
 			int [] values = new int[_lookup != null ? _lookup.keySet().size() : 0];
 			Iterator<Integer> iter = _lookup.keySet().iterator();
 			for(int i = 0; i < values.length; ++i){
@@ -51,7 +51,7 @@ public interface SubCellFalseColorCoder{
 		
 		@Override
 		public Iterator<Color> iterator() {
-			// TODO Auto-generated method stub
+			
 			return new Iterator<Color>(){
 				
                 int i = 0;
@@ -91,6 +91,11 @@ public interface SubCellFalseColorCoder{
 	public static class UsingDistinctColorsForValues extends UsingColorMap{ 
 		public UsingDistinctColorsForValues(final int[] values){
 			super(new HashMap<Integer, Color>(){
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 5389254432686542506L;
+
 				{
 					Iterator<Color> colors = new UniqueColorIterable(BASE_COLORS).iterator();
 					for(int value : values){
@@ -105,14 +110,13 @@ public interface SubCellFalseColorCoder{
 	public static class UsingArrayOfColors implements SubCellFalseColorCoder{
 		private Color[] _colors;
 		public UsingArrayOfColors(Color[] colors) {
-			// TODO Auto-generated constructor stub
 			_colors = colors;
 		}
 
 		@Override
 		public Color colorForSubCell(int row, int cell, int subCell,
 				int subCellValue) {
-			// TODO Auto-generated method stub
+			
 			return _colors != null && subCellValue < _colors.length ? _colors[subCellValue] : Color.BLACK;
 		}
 		
