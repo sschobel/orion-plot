@@ -9,9 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
+
+
 
 import bio.comp.orion.model.MatrixReader;
 import bio.comp.orion.model.MatrixReaders;
@@ -23,6 +31,7 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.TranscodingHints;
+import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.image.JPEGTranscoder;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.batik.transcoder.image.TIFFTranscoder;
@@ -164,13 +173,19 @@ public class OrionCommandLine {
 		Option[] options = new Option[] { formats, outputs };
 		Argument inputArgs = new InputArgument("inputs");
 		Map<String, Transcoder> typeTranscoders = new HashMap<String, Transcoder>(){{
-			put("png" , new PNGTranscoder());
+			TranscodingHints imghints = new TranscodingHints();
+			imghints.put(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
+			Transcoder tcode = new PNGTranscoder();
+			tcode.setTranscodingHints(imghints);
+			put("png" , tcode);
 			put("svg", new SVGTranscoder());
-			put("tiff", new TIFFTranscoder());
+			tcode = new TIFFTranscoder();
+			tcode.setTranscodingHints(imghints);
+			put("tiff", tcode);
 			JPEGTranscoder jpegTranscoder = new JPEGTranscoder();
-			TranscodingHints hints = new TranscodingHints();
-			hints.put(JPEGTranscoder.KEY_QUALITY, new Float(.9));
-			jpegTranscoder.setTranscodingHints(hints);;
+			TranscodingHints jpegHints = new TranscodingHints(imghints);
+			jpegHints.put(JPEGTranscoder.KEY_QUALITY, new Float(.9));
+			jpegTranscoder.setTranscodingHints(jpegHints);;
 			put("jpeg", jpegTranscoder);
 		}};
 		
@@ -247,14 +262,36 @@ public class OrionCommandLine {
 			Transcoder trans = typeTranscoders.get(conversionCommand.getOutputFormat());
 			if(trans != null){
 			try {
+				TranscoderOutput tout = null;
+				String fmt = conversionCommand.getOutputFormat();
+				ByteArrayOutputStream baos = null;
+				if(fmt.equalsIgnoreCase("svg")){
+					tout = new TranscoderOutput(new FileWriter(
+							conversionCommand.getOutputFile()
+							));
+				}
+				else{
+					baos = new ByteArrayOutputStream();
+					tout = new TranscoderOutput(baos);
+
+				}
+				errors.info(String.format("Converting file to %s", conversionCommand.getOutputFormat()));
 				trans.transcode(
 						new TranscoderInput(doc),
-						new TranscoderOutput(
-								new FileWriter(
-										new File(conversionCommand.getOutputPath())
-										)
-								)
+						tout
 						);
+				if(baos != null){
+
+					OutputStream os = new FileOutputStream(conversionCommand.getOutputPath(), false);
+					byte[] bytearr = baos.toByteArray();
+					errors.info(String.format("writing %d bytes to %s",  bytearr.length, conversionCommand.getOutputPath()));
+					os.write(bytearr, 0, bytearr.length);
+					os.flush();
+					os.close();
+					os = null;
+				}
+				errors.info(String.format("Conversion complete %s", conversionCommand.getOutputPath()));
+
 			} catch (TranscoderException e) {
 				errors.log(
 						Level.SEVERE,  

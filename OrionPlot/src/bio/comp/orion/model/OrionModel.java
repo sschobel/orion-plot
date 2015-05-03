@@ -1,10 +1,16 @@
 package bio.comp.orion.model;
 
 import java.awt.Color;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 public interface OrionModel extends Iterable<DataLine> {
 	public int getDataMatrixEntryCount();
@@ -13,6 +19,7 @@ public interface OrionModel extends Iterable<DataLine> {
 	public Color colorForValue(int cellValue);
 	public int getHeaderCount();
 	public String getHeader(int index);
+	public MatrixHeader getMatrixHeader(int index);
 	public DataLine[] getDataMatrix();
 	public SubCellFalseColorCoder getColorCoder();
 	public void setColorCoder(SubCellFalseColorCoder colorCoder);
@@ -22,11 +29,49 @@ public interface OrionModel extends Iterable<DataLine> {
 	public static class DefaultOrionModel implements OrionModel{
 		DataLine[] _matrix;
 		MatrixHeader[] _headers;
+		Map<Integer, Color> _colorPalette = new HashMap<Integer, Color>();
 		SubCellFalseColorCoder _colorLookup;
+		SubCellFalseColorCoder _colorLookupWrapper;
 		public DefaultOrionModel(DataLine[] matrix, MatrixHeader[] headers, SubCellFalseColorCoder colorCoder){
+			this(matrix, headers, null, colorCoder);
+		}
+		public DefaultOrionModel(DataLine[] matrix, MatrixHeader[] headers, Map<Integer, Color>palette, SubCellFalseColorCoder colorCoder){
+			_colorPalette = palette;
 			_headers = headers;
 			_matrix = matrix;
 			_colorLookup = colorCoder;
+			_colorLookupWrapper = new SubCellFalseColorCoder(){
+
+				@Override
+				public Color colorForSubCell(int row, int cell, int subCell,
+						int subCellValue) {
+					// TODO Auto-generated method stub
+					Color paletteColor = _colorPalette != null && _colorPalette.containsKey(subCellValue) ? _colorPalette.get(subCellValue) : null;
+					Color lookupColor = _colorLookup != null ? _colorLookup.colorForSubCell(row, cell, subCell, subCellValue) : null;
+					return MoreObjects.firstNonNull(paletteColor, lookupColor != null ? lookupColor : Color.BLACK);
+				}
+
+				@Override
+				public int[] codesForValues() {
+					// TODO Auto-generated method stub
+					Set<Integer> paletteValues = _colorPalette.keySet();
+					int [] lookupValueArray =  _colorLookup != null ? _colorLookup.codesForValues() : new int[0];
+					
+					Set<Integer> lookupValues = new HashSet<Integer>();
+					for(int i : lookupValueArray){
+						lookupValues.add(i);
+					}
+					lookupValues.addAll(paletteValues);
+					int valueArray[] = new int[lookupValues.size()];
+					int i = 0;
+					for(Integer I : lookupValues){
+						valueArray[i++]= I;
+					}
+					return valueArray;
+				}
+				
+				
+			};
 		}
 		public DefaultOrionModel(){
 			this(null, null, null);
@@ -71,13 +116,17 @@ public interface OrionModel extends Iterable<DataLine> {
 		@Override
 		public String getHeader(int index) {
 			
-			return _headers != null && index < _headers.length ? _headers[index].getLineName() : "";
+			return _headers != null && index < _headers.length ? _headers[index].getName() : "";
+		}
+		@Override
+		public MatrixHeader getMatrixHeader(int index){
+			return _headers != null && index >= 0 && index < _headers.length ? _headers[index] : MatrixHeaders.createHeader("");
 		}
 		@Override
 		public Color colorForValue(int matrixIndex, int cellIndex,
 				int subIndex, int value) {
 			
-			return _colorLookup != null ? _colorLookup.colorForSubCell(matrixIndex, cellIndex, subIndex, value) : Color.black;
+			return _colorLookupWrapper.colorForSubCell(matrixIndex, cellIndex, subIndex, value);
 		}
 		@Override
 		public Iterator<DataLine> iterator() {
@@ -112,12 +161,23 @@ public interface OrionModel extends Iterable<DataLine> {
 		@Override
 		public SubCellFalseColorCoder getColorCoder() {
 			
-			return _colorLookup;
+			return _colorLookupWrapper;
 		}
 		@Override
 		public void setColorCoder(SubCellFalseColorCoder colorCoder) {
 			
 			_colorLookup = colorCoder;
 		}
+		@Override
+		public int getMaxDataLineLength() {
+			int max = 0;
+			for(DataLine line : _matrix){
+				max = Math.max(max, line.getLength());
+			}
+			return max;
+		}
 	}
+
+
+	public int getMaxDataLineLength();
 }

@@ -32,7 +32,7 @@ public interface OrionModelPresenter<P> {
 
 		public double getPlotElementPad() {
 
-			return 1.25;
+			return 5;
 		}
 
 		public int countElementsInRow(int row) {
@@ -70,10 +70,11 @@ public interface OrionModelPresenter<P> {
 				double x = (double) getHorizontalInset();
 				int colcount = uniform_width ? maxCountOfElementsInAllRows()
 						: countElementsInRow(row);
-				double h = getPlotElementHeight(INCLUDE_PADDING);
-				double w = colcount * getPlotElementWidth(INCLUDE_PADDING);
-				double y = ((double) getVerticalInset()) + (h * (double) row);
-				return new Rectangle2D.Double(x, y, w, h);
+				Rectangle2D first = getCellBounds(row, 0);
+				Rectangle2D last = getCellBounds(row, colcount-1);
+				double w = last.getMaxX() - first.getMinX();
+				double h = Math.max(first.getHeight(), last.getHeight());
+				return new Rectangle2D.Double(first.getMinX(), first.getMinY(), w, h);
 			} else {
 				return null;
 			}
@@ -83,25 +84,29 @@ public interface OrionModelPresenter<P> {
 			return _labelGap;
 		}
 
-		private double _blockWidth = MatrixHeaders.BLOCK_WIDTH;
 
-		public double getBlockWidth() {
-			return _blockWidth;
+		public double getBlockWidth(int col) {
+			return _model.getMatrixHeader(col).getWidth();
 		}
 
-		private double _blockHeight = MatrixHeaders.BLOCK_HEIGHT;
 
-		public double getBlockHeight() {
-			return _blockHeight;
+		public double getBlockHeight(int col) {
+			return _model.getMatrixHeader(col).getHeight();
+		}
+		public double getBlockHeight(){
+			return getBlockHeight(-1);
+		}
+		public double getBlockWidth(){
+			return getBlockWidth(-1);
 		}
 
-		public double getPlotElementWidth(boolean includePadding) {
-			return getBlockWidth()
+		public double getPlotElementWidth(int col, boolean includePadding) {
+			return getBlockWidth(col)
 					* (includePadding ? getPlotElementPad() : 1.0);
 		}
 
-		public double getPlotElementHeight(boolean includePadding) {
-			return getBlockHeight()
+		public double getPlotElementHeight(int col, boolean includePadding) {
+			return getBlockHeight(col)
 					* (includePadding ? getPlotElementPad() : 1.0);
 		}
 
@@ -110,9 +115,10 @@ public interface OrionModelPresenter<P> {
 
 		public Rectangle2D getMatrixBounds(boolean includePadding) {
 			int height = _model.getDataMatrixEntryCount();
-			int width = 0;
-			double h = (double) height * getPlotElementHeight(includePadding);
-			double w = (double) width * getPlotElementWidth(includePadding);
+			int width = _model.getMaxDataLineLength();
+			double h = (double) height * getPlotElementHeight(-1, includePadding);
+			Rectangle2D rowBounds = getRowBounds(0, false);
+			double w = rowBounds.getWidth();
 			return new Rectangle2D.Double((double) getHorizontalInset(),
 					(double) getVerticalInset(), w + getHorizontalInset(), h
 							+ getVerticalInset());
@@ -143,16 +149,14 @@ public interface OrionModelPresenter<P> {
 			return getMatrixBounds().createUnion(getLabelBounds());
 		}
 
-		protected AffineTransform getCellTransform() {
-			double w = getBlockWidth(), h = w;
-
-			AffineTransform place = AffineTransform.getScaleInstance(w * 1.25,
-					h * 1.25);
-			AffineTransform offset = AffineTransform.getTranslateInstance(
-					getHorizontalInset(), getVerticalInset());
-			AffineTransform tx = new AffineTransform(offset);
-			tx.concatenate(place);
-			return tx;
+		protected Rectangle2D getCellBounds(int row, int col) {
+			double w = getBlockWidth(col), h = getBlockHeight(col);
+			double y = (h + getPlotElementPad()) * row;
+			double x = getPlotElementPad() * col;
+			for(int i = col-1; i >= 0; i--){
+				x += (getBlockWidth(i) + getPlotElementPad());
+			}
+			return new Rectangle2D.Double(x + getHorizontalInset(), y + getVerticalInset(), w, h);
 		}
 
 		protected List<Color> colorsForCell(int row, int cell) {
@@ -204,22 +208,16 @@ public interface OrionModelPresenter<P> {
 		}
 
 		public void overAllCells(CellIterator iter) {
-			AffineTransform tx = getCellTransform();
 			Point2D cellOrigin = new Point2D.Double();
-			Point2D txCellOrigin = new Point2D.Double();
-			Rectangle2D cellRect = new Rectangle2D.Double();
-			double cw = getBlockWidth();
-			double ch = getBlockHeight();
+			
 			int matrixLen = _model.getDataMatrixEntryCount();
 			for (int row_i = 0; iter != null && row_i < matrixLen; row_i++) {
 				DataLine line = _model.getDataMatrixEntry(row_i);
 				for (int cell_j = 0; iter != null && cell_j < line.getLength(); cell_j++) {
 					List<Integer> cellValues = line.getValuesAt(cell_j);
 					List<Color> cellColors = colorsForCell(row_i, cell_j);
-					cellOrigin.setLocation((double) cell_j, (double) row_i);
-					tx.transform(cellOrigin, txCellOrigin);
-					cellRect.setRect(txCellOrigin.getX(), txCellOrigin.getY(),
-							cw, ch);
+					cellOrigin.setLocation(0, 0);
+					Rectangle2D cellRect = getCellBounds(row_i, cell_j);
 					List<Rectangle2D> cellRects = splitRectangle(cellRect,
 							cellValues.size());
 					iter.iterate(line, row_i, cell_j, cellRects, cellValues,

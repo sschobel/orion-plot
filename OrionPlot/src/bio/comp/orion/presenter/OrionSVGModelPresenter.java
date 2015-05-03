@@ -18,12 +18,14 @@ import org.w3c.dom.events.EventListener;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.svg.SVGDocument;
 
+import bio.comp.orion.model.Colors;
 import bio.comp.orion.model.DataLine;
+import bio.comp.orion.model.MatrixHeader;
 import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.presenter.OrionModelPresenter.BaseOrionModelPresenter;
 import bio.comp.orion.ui.SVGDocumentUpdater;
 
-import com.sun.xml.internal.ws.util.xml.NodeListIterator;
+
 
 public class OrionSVGModelPresenter extends
 		BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
@@ -65,11 +67,9 @@ public class OrionSVGModelPresenter extends
 	public void present(final SVGDocument document) {
 		Element svgRoot = document.getDocumentElement();
 		NodeList existingChildren = svgRoot.getChildNodes();
-
-		for (NodeListIterator ecIter = new NodeListIterator(existingChildren); ecIter
-				.hasNext();) {
-			Node i = (Node) ecIter.next();
-			svgRoot.removeChild(i);
+		for (int i = 0; i < existingChildren.getLength(); ++i) {
+			Node in = existingChildren.item(i);
+			svgRoot.removeChild(in);
 		}
 		Rectangle2D graphBounds = OrionSVGModelPresenter.this.getGraphBounds();
 		svgRoot.setAttributeNS(null, "width",
@@ -85,7 +85,7 @@ public class OrionSVGModelPresenter extends
 					String labelText) {
 				
 				Element label = SVGUtilities.createText(document,
-						(float) frame.getMaxX(), (float) frame.getCenterY(),
+						(float) frame.getMaxX(), (float) (frame.getMaxY() - (frame.getHeight()/4.0)),
 						labelText);
 
 				label.setAttributeNS(null, "stroke", "black");
@@ -96,20 +96,17 @@ public class OrionSVGModelPresenter extends
 		final Element cellG = document.createElementNS(svgNS, "g");
 		cellG.setAttributeNS(null, "id", "cells");
 		svgRoot.appendChild(cellG);
-		AffineTransform tx = getCellTransform();
-		Point2D hSrc = new Point2D.Double();
-		Point2D hOrigin = new Point2D.Double();
+		
 		final Element headerG = document.createElementNS(svgNS, "g");
 		svgRoot.appendChild(headerG);
 		int numHeaders = _model.getHeaderCount();
 		for (int i = 0; i < numHeaders; ++i) {
-			hSrc.setLocation(i, 0);
-			tx.transform(hSrc, hOrigin);
-			String header = _model.getHeader(i);
+			Rectangle2D cellRect = getCellBounds(0, i);
+			MatrixHeader header = _model.getMatrixHeader(i);
 			if (header != null) {
 				Element label = SVGUtilities.createText(document,
-						(float) hOrigin.getX(), (float) hOrigin.getY(), header);
-				label.setAttributeNS(null, "stroke", "black");
+						(float)( cellRect.getMinX() + (cellRect.getWidth()/4.0f)), (float) (cellRect.getMinY() - (getVerticalInset()/4.0)), header.getName());
+				label.setAttributeNS(null, "stroke", Colors.toHexString(header.getColor()));
 				headerG.appendChild(label);
 			}
 		}
@@ -132,9 +129,8 @@ public class OrionSVGModelPresenter extends
 							Double.toString(r.getWidth()));
 					rect.setAttributeNS(null, "height",
 							Double.toString(r.getHeight()));
-					int cr = rc.getRed(), cg = rc.getGreen(), cb = rc.getBlue();
-					String hex = String.format("#%02x%02x%02x", cr, cg, cb);
-					rect.setAttributeNS(null, "fill", hex);
+					
+					rect.setAttributeNS(null, "fill", Colors.toHexString(rc));
 					rect.setAttributeNS(null, "stroke", "black");
 					cellG.appendChild(rect);
 				}
