@@ -1,1 +1,3 @@
 .DS_Store
+.gradle
+OrionPlot/plot.svg

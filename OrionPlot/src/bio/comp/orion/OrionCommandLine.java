@@ -141,20 +141,20 @@ public class OrionCommandLine {
 
 	protected static class InputArgument extends Argument {
 		public InputArgument(String name) {
-			super(name);
+			super(name, "Input file to process");
 		}
 	}
 
 	private static class OutputOption extends Option {
 		public OutputOption() {
-			super("out");
+			super("out", "o", "Path to output file");
 			// TODO Auto-generated constructor stub
 		}
 	}
 
 	private static class FormatOption extends Option {
 		public FormatOption() {
-			super("format");
+			super("format", "f", "Output format");
 			addChoice("svg");
 			addChoice("png");
 			addChoice("tiff");
@@ -162,6 +162,19 @@ public class OrionCommandLine {
 		}
 	}
 
+	
+	private static void printHelp(Option[] options){
+		System.err.printf("%s - OrionPlot command line tool\n", OrionCommandLine.class.getName());
+		System.err.printf("Usage: \n");
+		System.err.printf("java -jar <jarfile> %s <options> <input_file>.csv\n",OrionCommandLine.class.getName());
+		System.err.printf("Options:\n");
+		System.err.printf("\t--help, -h, -? - Print this message\n");
+		for(Option opt : options){
+			System.err.printf("\t%s\n", opt.toHelpString());
+		}
+		System.err.printf("Notes:\n");
+		System.err.printf("- Multiple output formats are permitted for a single input\n");
+	}
 	/**
 	 * @param args
 	 */
@@ -191,6 +204,10 @@ public class OrionCommandLine {
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
+			if (arg.equals("-h") || arg.equals("--help") || arg.equals("-?")){
+				printHelp(options);
+				System.exit(0);
+			}
 			if (Option.isOption(arg) || Option.isShortOption(arg)) {
 				Option matchedOption = null;
 				for (Option opt : options) {
@@ -298,6 +315,7 @@ public class OrionCommandLine {
 						String.format("Could not convert %s to format '%s'", conversionCommand.getInputPath(), conversionCommand.getOutputFormat()), 
 						e
 						);
+				System.exit(1);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				errors.log(
@@ -305,6 +323,7 @@ public class OrionCommandLine {
 						String.format("Could not write svg document to '%s'", conversionCommand.getOutputPath()),
 						e
 						);
+				System.exit(2);
 			}
 			}
 			else {

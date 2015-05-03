@@ -4,17 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 
 class Option extends Argument{
 	private String _shortName;
 	private List<String> _choices;
-	public Option(String name, String shortName){
-		super(name);
+	public Option(String name, String shortName, String desc){
+		super(name, desc);
 		_name = name;
 		_shortName = shortName;
 		_choices = new ArrayList<String>();
 	}
 
+	public Option(String name, String shortName){
+		this(name, shortName, null);
+	}
 	public Option(String name){
 		this(name, name.substring(0, 1));
 	}
@@ -78,5 +82,11 @@ class Option extends Argument{
 	public String toString(){
 		return String.format("option '%s' : %s", _name, Joiner.on(", ").join(_values));
 	}
-	
+	public String toHelpString(){
+		String lon = "-" + getName();
+		String shopt = (_shortName != null) ? "[ -" + _shortName + " ]" : "";
+		String validOpts = (_choices == null || _choices.size() ==0 )? "" : ": ( " + Joiner.on(", ").join(_choices) + " )";
+		String description = Strings.isNullOrEmpty(_desc) ? "" : " - " + _desc;
+		return String.format("%s %s%s%s", lon, shopt,description, validOpts);
+	}
 }
