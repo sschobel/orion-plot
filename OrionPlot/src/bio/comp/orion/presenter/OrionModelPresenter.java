@@ -115,13 +115,12 @@ public interface OrionModelPresenter<P> {
 
 		public Rectangle2D getMatrixBounds(boolean includePadding) {
 			int height = _model.getDataMatrixEntryCount();
-			int width = _model.getMaxDataLineLength();
-			double h = (double) height * getPlotElementHeight(-1, includePadding);
-			Rectangle2D rowBounds = getRowBounds(0, false);
-			double w = rowBounds.getWidth();
-			return new Rectangle2D.Double((double) getHorizontalInset(),
-					(double) getVerticalInset(), w + getHorizontalInset(), h
-							+ getVerticalInset());
+			int bigRow = _model.getMaxDataLineRowIndex();
+			Rectangle2D rowBounds = getRowBounds(bigRow, false);
+			Rectangle2D lastRow = getRowBounds(height - 1, false);
+			Rectangle2D firstRow = getRowBounds(0, false);
+			
+			return new Rectangle2D.Double(firstRow.getMinX(), firstRow.getMinY(), rowBounds.getMaxX(), lastRow.getMaxY());
 		}
 
 		private double vInset = 15.0;
@@ -146,7 +145,9 @@ public interface OrionModelPresenter<P> {
 		}
 
 		protected Rectangle2D getGraphBounds() {
-			return getMatrixBounds().createUnion(getLabelBounds());
+			Rectangle2D matlabBounds = getMatrixBounds().createUnion(getLabelBounds());
+			matlabBounds.add(matlabBounds.getMaxX() + getHorizontalInset(), matlabBounds.getMaxY() + getVerticalInset());
+			return matlabBounds;
 		}
 
 		protected Rectangle2D getCellBounds(int row, int col) {

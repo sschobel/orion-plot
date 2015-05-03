@@ -24,6 +24,8 @@ public interface OrionModel extends Iterable<DataLine> {
 	public SubCellFalseColorCoder getColorCoder();
 	public void setColorCoder(SubCellFalseColorCoder colorCoder);
 	public Set<Integer> getMatrixUniques();
+	public int getMaxDataLineLength();
+	public int getMaxDataLineRowIndex();
 
 	
 	public static class DefaultOrionModel implements OrionModel{
@@ -176,8 +178,23 @@ public interface OrionModel extends Iterable<DataLine> {
 			}
 			return max;
 		}
+		@Override
+		public int getMaxDataLineRowIndex() {
+			// TODO Auto-generated method stub
+			int idx = -1;
+			int max = 0;
+			for(int i = 0; i < _matrix.length; ++i){
+				DataLine line = _matrix[i];
+				if(line.getLength() > max){
+					max = line.getLength();
+					idx = i;
+				}
+			}
+			return idx;
+		}
 	}
 
 
-	public int getMaxDataLineLength();
+	
+	
 }

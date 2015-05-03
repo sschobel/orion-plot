@@ -78,7 +78,7 @@ public class MatrixReaders {
 		}
 
 		protected Map<Integer, Color> getColorMap() {
-			return null;
+			return _palette;
 		}
 
 		protected final Set<Integer> getUniqueValuesAsSet() {
@@ -104,21 +104,15 @@ public class MatrixReaders {
 		@Override
 		public OrionModel getModel() {
 
-			Map<Integer, Color> map = getColorMap();
-			SubCellFalseColorCoder coder = null;
-			if (map == null) {
-
-				coder = new SubCellFalseColorCoder.UsingDistinctColorsForValues(
+			SubCellFalseColorCoder coder =  new SubCellFalseColorCoder.UsingDistinctColorsForValues(
 						getUniqueValues());
-			} else {
-				coder = new SubCellFalseColorCoder.UsingColorMap(map);
-			}
-			return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),
+			 return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),getColorMap(),
 					coder);
 		}
 
 		private static final String COLUMN_PREFIX = "#headers:";
-		private static final String PALETE_PREFIX = "#pallete";
+		private static final String PALETE_PREFIX = "#palette:";
+		private static final String PALETE_PREFIX_ALT = "#pallete:";
 		private static final String DECL_SEPARATOR = ";";
 
 		protected DataLine readLineIntoMatrix(String line) {
@@ -135,7 +129,7 @@ public class MatrixReaders {
 					_headers.addAll(headerList);
 
 				}
-				if (line.startsWith(PALETE_PREFIX)) {
+				if (line.startsWith(PALETE_PREFIX) || line.startsWith(PALETE_PREFIX_ALT)) {
 					String palleteDeclStr = line.substring(PALETE_PREFIX
 							.length());
 					Splitter declSplitter = Splitter.on("=").trimResults();
