@@ -12,10 +12,40 @@ It's feature set includes
 * Customization of the false-color map used in visualization
 * Image export of resultant visualization.
 
+Dependencies
+------------
+OrionPlot utilizes several third-party libraries.  These include
+* Guava (by Google); for making the impossible possible
+* Batik (by Apache Software Foundation), for plotting, SVG support and image export
+* Batik requires the following sub-dependencies
+** xmlgraphics-commons
+** commons-logging
+** commons-io
+** xalan
+** xml-apis
+** xml-apis-ext
+** avalon-framework
+** fop
+* JSON  , because it's STILL not in the Java runtime
+* MigLayout (by MiG Infocom), for making Swing sing
+
+
 Setup
 -----
 
-OrionPlot is offered in the form of an Eclipse project.
+Building OrionPlot from source requires the following tools
+
+1. Java JDK 1.8
+2. Gradle v2.2 or higher
+3. An internet connection from which Gradle will download the third party libraries this project utilizes.
+
+Once these are installed you can build Gradle from the command line by typing
+
+> gradle jar
+
+This project can also be be imported into eclipse, provided you first install the 'Gradle' plugin.
+
+
 
 Using
 -----
