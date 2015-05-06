@@ -1,7 +1,7 @@
 apply plugin: 'java'
 buildDir 'bin'
 sourceCompatibility = 1.6
-version = '0.5'
+version = '1.0'
 
 def batik_artifacts = [
 	'batik-' : [ 

@@ -41,7 +41,7 @@ Building OrionPlot from source requires the following tools
 
 Once these are installed you can build Gradle from the command line by typing
 
-> gradle jar
+> gradle fullJar
 
 This project can also be be imported into eclipse, provided you first install the 'Gradle' plugin.
 
@@ -50,12 +50,22 @@ This project can also be be imported into eclipse, provided you first install th
 Using
 -----
 
-TODO
+Build products can be found under bin/libs
+
+GUI Application
+
+java -jar ./Orion-Plot-<version>.jar bio.comp.orion.OrionLauncher
+
+Command Line Tool
+
+java -jar ./Orion-Plot-<version>.jar bio.comp.orion.OrionCommandLine <arguments>
+
+Help is available for the command line tool by invoking the command above with the '-h' option
 
 Design
 ------------
 
-OrionPlot's design attempts to isolate data representation from user interface through the use of controller classes.  This is more commonly referred to as the MVC design pattern.  
+OrionPlot's design attempts to isolate data representation from user interface through the use of controller classes.  This is more commonly referred to as the MVP (Model-View-Presenter) design pattern.  
 
 The main application window is referred to as an OrionFrame and contains within it an instance of OrionPlotPanel and a JTable containing the color index mapping.  These are the two primary user interface elements visible inside an OrionFrame.
 
