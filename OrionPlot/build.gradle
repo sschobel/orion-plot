@@ -1,6 +1,7 @@
 apply plugin: 'java'
 buildDir 'bin'
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility  = 1.8
 version = '1.0'
 
 def batik_artifacts = [
@@ -74,3 +75,7 @@ task fullJar(type: Copy, dependsOn:jar) {
 	into jar.destinationDir
 }
 
+task showJavaHome {
+println "${System.getProperty('java6.home')}/jre/lib/rt.jar"
+print System.getProperties()
+}

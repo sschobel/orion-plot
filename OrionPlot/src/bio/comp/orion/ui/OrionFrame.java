@@ -17,8 +17,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Filter;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
@@ -40,6 +43,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.border.EmptyBorder;
 import javax.swing.colorchooser.ColorSelectionModel;
@@ -56,7 +60,15 @@ import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Maps;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+
+import bio.comp.orion.OrionConstants;
+import bio.comp.orion.OrionEvents;
+import static bio.comp.orion.OrionEvents.*;
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.MatrixReader;
 import bio.comp.orion.model.MatrixReaders;
@@ -64,6 +76,7 @@ import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.model.Preference;
 import bio.comp.orion.model.SubCellFalseColorCoder;
 
+@SuppressWarnings("serial")
 public class OrionFrame extends JFrame {
 
 	/**
@@ -73,7 +86,7 @@ public class OrionFrame extends JFrame {
 	private JPanel contentPane;
 	private OrionPlotPanel orionPlotPanel = new OrionPlotPanel();
 	private JFrame colorEditFrame;
-	private final Action action = new OpenFileAction();
+	private final Action openFileAction = new OpenFileAction();
 	private final Action imgAction = new SaveAsImageAction();
 	private final Action svgAction = new SaveAsSVGAction();
 	private final Action quitAction = new QuitAction();
@@ -82,20 +95,21 @@ public class OrionFrame extends JFrame {
 	private ColorIndexTableModel colorAssignmentGridModel;
 	private SubCellFalseColorCoder colorCoder;
 	private final Logger dlog = Logger.getAnonymousLogger();
+	private final JProgressBar progressBar = new OrionStatusBar();
 
 	/**
 	 * Create the frame.
 	 */
-	@SuppressWarnings("serial")
 	public OrionFrame() {
 		dlog.setLevel(Level.WARNING);
+		OrionConstants.STATUS_EVENT_BUS.get().register(progressBar);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1440, 900);
 
 		JMenuBar menuBar = new JMenuBar(){{
 			add(new JMenu("File"){{
 				add(new JMenuItem("Open..."){{
-					setAction(action);
+					setAction(openFileAction);
 				}});
 				add(new JMenuItem("Export Image..."){{
 					setAction(imgAction);
@@ -119,12 +133,12 @@ public class OrionFrame extends JFrame {
 		setContentPane(contentPane);
 
 		JButton button = new JButton("Choose...");
-		button.setAction(action);
+		button.setAction(openFileAction);
 		JSVGScrollPane scroller = new JSVGScrollPane(orionPlotPanel);
 
 
 
-		JProgressBar progressBar = new JProgressBar();
+		progressBar.setStringPainted(true);
 		final JTable colorAssignmentGrid = new JTable();
 		colorAssignmentGridModel = ColorIndexTableModel.createWithColors(SubCellFalseColorCoder.DEFAULT_CODING);
 		colorAssignmentGridModel.addTableModelListener(new TableModelListener() {
@@ -171,7 +185,6 @@ public class OrionFrame extends JFrame {
 			public void valueChanged(ListSelectionEvent arg0) {
 				
 				int sel = colorAssignmentGrid.getSelectedRow();
-				
 				Color clr = (Color) colorAssignmentGridModel.getValueAt(sel, ColorIndexConstants.COLOR_TABLE_COLUMN);
 				colorChooser.setColor(clr);
 				
@@ -204,6 +217,7 @@ public class OrionFrame extends JFrame {
                         int selectedRow = colorAssignmentGrid.getSelectedRow();
                         if(selectedRow >= 0){
                         	colorAssignmentGridModel.setValueAt(selection, selectedRow, ColorIndexConstants.COLOR_TABLE_COLUMN);
+                        	
                         }
 					}
 					dlog.fine(desc);
@@ -303,8 +317,76 @@ public class OrionFrame extends JFrame {
 		return false;
 	}
 
+	
+	private final class OrionStatusBar extends JProgressBar {
+		private Map<String, Object> _lastEventMap;
+		public Map<String, Object> getLastEventMap(){
+			return _lastEventMap;
+		}
+		public OrionStatusBar(){
+			super();
+			addMouseListener(new MouseAdapter() {
 
-	private class SaveFileAction extends AbstractAction {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					super.mouseClicked(e);
+					if(e.getClickCount() == 2){
+						OrionStatusBar.this.showLastEventInDialog();
+					}
+				}
+
+			});
+		}
+		public void showLastEventInDialog(){
+			Map<String,Object> eventMap  =getLastEventMap();
+			if(eventMap == null){
+				return;
+			}
+			else{
+				OrionEvents.makeEventDialog(this, eventMap).setVisible(true);
+			}
+		}
+		@Subscribe
+		public void statusEventPosted(final Map<String, Object> eventMap){
+			final JProgressBar self = this;
+			_lastEventMap = eventMap;
+			
+			SwingUtilities.invokeLater(new Runnable(){
+				@Override
+				public void run() {
+                        self.setStringPainted(true);
+                        self.setString(eventMap.get(OrionConstants.STATUS_EVENT_DESCRIPTION_KEY).toString());
+				}
+			});
+		}
+	}
+	private interface OrionAction{
+	}
+	private abstract class AbstractOrionAction extends AbstractAction implements OrionAction {
+		
+		private EventBus statusBus = OrionConstants.STATUS_EVENT_BUS.get();
+		public AbstractOrionAction(){
+			super();
+		}
+		
+		abstract protected void respondToAction(ActionEvent arg0);
+		@Override
+		public void actionPerformed(ActionEvent arg0){
+			String actionName = MoreObjects.firstNonNull(getValue(NAME), this.getClass().getName()).toString();
+			try{
+				statusBus.post(makeEventRecord(actionName + " started."));
+				respondToAction(arg0);
+				statusBus.post(makeEventRecord(actionName + " complete."));
+			}
+			catch(Throwable e){
+               String desc = String.format("Action (%s) failed!", actionName) ;
+               statusBus.post(makeEventRecord(desc, this, e));
+			}
+		}
+		
+	}
+
+	private class SaveFileAction extends AbstractOrionAction {
 		/**
 		 * 
 		 */
@@ -316,10 +398,10 @@ public class OrionFrame extends JFrame {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		protected void respondToAction(ActionEvent arg0) {
 			
 			if(true)
-				throw new NotImplementedException();
+				throw new UnsupportedOperationException("saving to a plot file is not permitted");
 			String saveFolderParent = Preference.SAVE_FOLDER.getPreference(prefs, String.class);
 			JFileChooser jfc = new JFileChooser(saveFolderParent);
 			jfc.setSelectedFile(new File("plot.csv"));
@@ -337,7 +419,7 @@ public class OrionFrame extends JFrame {
 
 		}
 	}
-	private class SaveAsSVGAction extends AbstractAction{
+	private class SaveAsSVGAction extends AbstractOrionAction{
 		/**
 		 * 
 		 */
@@ -349,7 +431,7 @@ public class OrionFrame extends JFrame {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		protected void respondToAction(ActionEvent arg0) {
 			
 			if(orionPlotPanel.getDocument() == null){
 				return;
@@ -369,7 +451,7 @@ public class OrionFrame extends JFrame {
 				
 					tcoder.transcode(
 							new TranscoderInput(orionPlotPanel.getDocument()), 
-							new TranscoderOutput(new FileOutputStream(outputfile)));
+							new TranscoderOutput(new FileWriter(outputfile)));
 				} catch (TranscoderException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -382,7 +464,7 @@ public class OrionFrame extends JFrame {
 		}
 	}
 
-	private class SaveAsImageAction extends AbstractAction{
+	private class SaveAsImageAction extends AbstractOrionAction{
 		/**
 		 * 
 		 */
@@ -394,7 +476,7 @@ public class OrionFrame extends JFrame {
 		}
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		protected void respondToAction(ActionEvent arg0) {
 			
 			String saveImageParent = Preference.IMG_FOLDER.getPreference(prefs, String.class);
 			JFileChooser jfc = new JFileChooser(saveImageParent);
@@ -445,7 +527,7 @@ public class OrionFrame extends JFrame {
 		orionPlotPanel.repaint();
 	}
 
-	private class OpenFileAction extends AbstractAction {
+	private class OpenFileAction extends AbstractOrionAction {
 		/**
 		 * 
 		 */
@@ -454,7 +536,7 @@ public class OrionFrame extends JFrame {
 			putValue(NAME, "Open...");
 			putValue(SHORT_DESCRIPTION, "Opens a plot file");
 		}
-		public void actionPerformed(ActionEvent e) {
+		protected void respondToAction(ActionEvent e) {
 			String startingFolder = prefs.get(Preference.OPEN_FOLDER.getKey(), Preference.SAVE_FOLDER.getPreference(prefs, String.class)); 
 			System.err.format("Getting starting folder preference %s\n", startingFolder);
 			JFileChooser jfc = new JFileChooser(startingFolder);
@@ -475,7 +557,7 @@ public class OrionFrame extends JFrame {
 		}
 	}
 
-	private class ShowColorEditorAction extends AbstractAction{
+	private class ShowColorEditorAction extends AbstractOrionAction{
 		/**
 		 * 
 		 */
@@ -485,14 +567,14 @@ public class OrionFrame extends JFrame {
 			putValue(SHORT_DESCRIPTION, "Modify colors used in the plot");
 		}
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		protected void respondToAction(ActionEvent arg0) {
 			
 			colorEditFrame.setVisible(true);
 		}
 
 	}
 
-	private class QuitAction extends AbstractAction{
+	private class QuitAction extends AbstractOrionAction{
 		/**
 		 * 
 		 */
@@ -501,7 +583,7 @@ public class OrionFrame extends JFrame {
 			putValue(NAME, "Quit");
 			putValue(SHORT_DESCRIPTION, "Exits this application");
 		}
-		public void actionPerformed(ActionEvent e){
+		protected void respondToAction(ActionEvent e){
 			Preference.OPEN_PREVIOUS_SESSION_ON_START.setPreference(prefs, Boolean.TRUE);
 			Preference.flush(prefs);
 			System.exit(0);

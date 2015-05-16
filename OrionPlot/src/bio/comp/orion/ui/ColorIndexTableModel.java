@@ -36,6 +36,9 @@ class ColorIndexTableModel implements TableModel{
 		ColorIndex changeColor(Color aColor){
 			return new ColorIndex(_idx, aColor);
 		}
+		public ColorIndex changeIndex(Integer newInt) {
+			return new ColorIndex(newInt, _color);
+		}
 	}
 	List<ColorIndex> colorIndexes = new ArrayList<ColorIndex>();
 	Set<TableModelListener> listeners = new HashSet<TableModelListener>();
@@ -127,7 +130,10 @@ class ColorIndexTableModel implements TableModel{
 		ColorIndex newValue = null;
 		switch (columnIndex) {
 		case ColorIndexConstants.INDEX_TABLE_COLUMN:
-			//Ignore forced changes to INDEX
+			if(value instanceof Integer){
+				Integer newInt = (Integer)value;
+				newValue = oldValue.changeIndex(newInt);
+			}
 			break;
 		case ColorIndexConstants.COLOR_TABLE_COLUMN:
 			if(value instanceof Color){

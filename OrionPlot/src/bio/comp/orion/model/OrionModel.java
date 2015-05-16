@@ -42,6 +42,7 @@ public interface OrionModel extends Iterable<DataLine> {
 			_headers = headers;
 			_matrix = matrix;
 			_colorLookup = colorCoder;
+			//This wrapper allows for changing the color coder without replacing it for every user
 			_colorLookupWrapper = new SubCellFalseColorCoder(){
 
 				@Override
@@ -50,7 +51,7 @@ public interface OrionModel extends Iterable<DataLine> {
 					// TODO Auto-generated method stub
 					Color paletteColor = _colorPalette != null && _colorPalette.containsKey(subCellValue) ? _colorPalette.get(subCellValue) : null;
 					Color lookupColor = _colorLookup != null ? _colorLookup.colorForSubCell(row, cell, subCell, subCellValue) : null;
-					return MoreObjects.firstNonNull(paletteColor, lookupColor != null ? lookupColor : Color.BLACK);
+					return MoreObjects.firstNonNull(lookupColor, MoreObjects.firstNonNull(paletteColor, Color.black));
 				}
 
 				@Override
