@@ -25,7 +25,6 @@ import org.json.JSONTokener;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public class MatrixReaders {
 
@@ -57,6 +56,7 @@ public class MatrixReaders {
 			return _headers.toArray(new MatrixHeader[0]);
 		}
 
+		@SuppressWarnings("unused")
 		public String[] getHeaderNames() {
 
 			MatrixHeader[] headers = getHeaders();
@@ -81,7 +81,7 @@ public class MatrixReaders {
 			return _palette;
 		}
 
-		protected final Set<Integer> getUniqueValuesAsSet() {
+		public final Set<Integer> getUniqueValuesAsSet() {
 			HashSet<Integer> uniqs = new HashSet<Integer>();
 			for (DataLine line : getMatrix()) {
 				for (List<Integer> entry : line) {
@@ -91,7 +91,8 @@ public class MatrixReaders {
 			return uniqs;
 		}
 
-		protected int[] getUniqueValues() {
+		@SuppressWarnings("unused")
+		public final int[] getUniqueValues() {
 			Set<Integer> uniqs = getUniqueValuesAsSet();
 			Iterator<Integer> uiter = uniqs.iterator();
 			int[] vals = new int[uniqs.size()];
@@ -104,10 +105,7 @@ public class MatrixReaders {
 		@Override
 		public OrionModel getModel() {
 
-			SubCellFalseColorCoder coder =  new SubCellFalseColorCoder.UsingDistinctColorsForValues(
-						getUniqueValues());
-			 return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),getColorMap(),
-					coder);
+			 return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),getColorMap());
 		}
 
 		private static final String COLUMN_PREFIX = "#headers:";

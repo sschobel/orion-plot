@@ -1,14 +1,12 @@
 package bio.comp.orion.presenter;
 
 import java.awt.Color;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
 import bio.comp.orion.model.DataLine;
-import bio.comp.orion.model.MatrixHeaders;
 import bio.comp.orion.model.OrionModel;
 
 public interface OrionModelPresenter<P> {
@@ -67,7 +65,6 @@ public interface OrionModelPresenter<P> {
 		public Rectangle2D getRowBounds(int row, boolean uniform_width) {
 			int matrixLen = _model.getDataMatrixEntryCount();
 			if (row < matrixLen) {
-				double x = (double) getHorizontalInset();
 				int colcount = uniform_width ? maxCountOfElementsInAllRows()
 						: countElementsInRow(row);
 				Rectangle2D first = getCellBounds(row, 0);

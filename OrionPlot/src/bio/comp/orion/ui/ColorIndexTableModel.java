@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JLabel;
@@ -17,7 +18,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
-import bio.comp.orion.model.SubCellFalseColorCoder;
 
 class ColorIndexTableModel implements TableModel{
 	class ColorIndex{
@@ -114,7 +114,59 @@ class ColorIndexTableModel implements TableModel{
 		
 		listeners.remove(listener);
 	}
+	public static class ColorModelEvent{
+		private Object sender;
+		private ColorIndex oldValue;
+		private ColorIndex newValue;
+		public ColorModelEvent(Object sender, ColorIndex oldValue, ColorIndex newValue){
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+			this.sender = sender;
+		}
+		/**
+		 * @return the sender
+		 */
+		public Object getSender() {
+			return sender;
+		}
+		/**
+		 * @return the oldValue
+		 */
+		public ColorIndex getOldValue() {
+			return oldValue;
+		}
+		/**
+		 * @return the newValue
+		 */
+		public ColorIndex getNewValue() {
+			return newValue;
+		}
+		public boolean didColorChange(){
+			return !oldValue.getColor().equals(newValue.getColor());
+		}
+		public boolean didIndexChange(){
+			return !oldValue.getIndex().equals(newValue.getIndex());
+		}
+		
+	}
+	public interface ColorModelListener{
+		public void colorModelChanged(ColorModelEvent cme);
+	}
 
+	private List<ColorModelListener> colorModelListeners = new ArrayList<ColorModelListener>();
+	public void addColorModelListener(ColorModelListener cml){
+		if(!colorModelListeners.contains(cml)){
+			colorModelListeners.add(cml);
+		}
+	}
+	public void removeColorModelListener(ColorModelListener cml){
+		if(colorModelListeners.contains(cml)){
+			colorModelListeners.remove(cml);
+		}
+	}
+	public void removeAllColorModelListeners(){
+		colorModelListeners.clear();
+	}
 	private void _notifyTableModelListeners(TableModelEvent evt){
 		if(evt == null){
 			evt = new TableModelEvent(this);
@@ -122,6 +174,15 @@ class ColorIndexTableModel implements TableModel{
 		for (TableModelListener listener : listeners) {
 			listener.tableChanged(evt);
 		}
+	}
+	private final void _notifyColorModelListeners(ColorModelEvent evt){
+		if(evt != null){
+			
+		}
+		for(ColorModelListener cml : colorModelListeners){
+			cml.colorModelChanged(evt);
+		}
+		
 	}
 	@Override
 	public void setValueAt(Object value, int rowIndex, int columnIndex) {
@@ -139,6 +200,7 @@ class ColorIndexTableModel implements TableModel{
 			if(value instanceof Color){
 				Color newColor = (Color)value;
 				newValue = oldValue.changeColor(newColor);
+				_notifyColorModelListeners(new ColorModelEvent(this, oldValue, newValue));
 			}
 			break;
 		default:
@@ -176,10 +238,12 @@ class ColorIndexTableModel implements TableModel{
 		}
 		return cv;
 	}
-	private int _addColorIndex(Integer value, Color color){
+	private int _addColorIndex(Integer value, Color color, ReplacementStrategy rep){
 		int existingIdx = indexForValue(value);
 		if(existingIdx >= 0){
-			colorIndexes.set(existingIdx, new ColorIndex(value, color));
+			if(rep.replaceExisting){
+                colorIndexes.set(existingIdx, new ColorIndex(value, color));
+			}
 		}
 		else{
 			existingIdx = colorIndexes.size();
@@ -187,8 +251,8 @@ class ColorIndexTableModel implements TableModel{
 		}
 		return existingIdx;
 	}
-	public void addColorIndex(Integer value, Color color){
-		int row = _addColorIndex(value, color);
+	public void addColorIndex(Integer value, Color color, ReplacementStrategy rep){
+		int row = _addColorIndex(value, color, rep);
 		_notifyTableModelListeners(new TableModelEvent(this, row));
 	}
     public void removeAllColorIndexes(){
@@ -197,7 +261,7 @@ class ColorIndexTableModel implements TableModel{
 	public void addColorIndexIfAbsent(Integer value, Color color){
 		int idx = indexForValue(value);
 		if(idx < 0){
-			addColorIndex(value, color);
+			addColorIndex(value, color, ReplacementStrategy.KEEP);
 		}
 	}
 	public void addColorIndexes(Color[] colors){
@@ -205,7 +269,7 @@ class ColorIndexTableModel implements TableModel{
 		int hiRow= 0;
 		for(int idx = 0; idx < colors.length; ++idx){
 			Color color = colors[idx];
-			int row = _addColorIndex(idx, color);
+			int row = _addColorIndex(idx, color, ReplacementStrategy.REPLACE);
 			loRow = Math.min(loRow, row);
 			hiRow = Math.max(hiRow, row);
 		}
@@ -269,12 +333,23 @@ class ColorIndexTableModel implements TableModel{
 	public TableCellRenderer createColorCellRenderer(TableCellRenderer _default){
 		return new ColorCellRenderer(_default);
 	}
-	public void updateColorIndexesWithCoder(SubCellFalseColorCoder fileCoder) {
-		
-		this.removeAllColorIndexes();
-		for(int colorIndex : fileCoder.codesForValues()){
-			Color colorValue = fileCoder.colorForSubCell(-1, -1, -1, colorIndex);
-			addColorIndex(colorIndex, colorValue);
+	public enum ReplacementStrategy{
+		KEEP(false),
+		REPLACE(true);
+		private final Boolean replaceExisting;
+		ReplacementStrategy(boolean replaceExisting){
+			this.replaceExisting= replaceExisting;
+		}
+		boolean replaceExisting(){
+			return replaceExisting;
+		}
+	}
+	public void addColorIndexes(Map<Integer, Color>colorMap){
+		this.addColorIndexes(colorMap, ReplacementStrategy.KEEP);
+	}
+	public void addColorIndexes(Map<Integer, Color>fileCoder, ReplacementStrategy strat) {
+		for(Map.Entry<Integer, Color> colorIndex : fileCoder.entrySet()){
+			addColorIndex(colorIndex.getKey(), colorIndex.getValue(), strat);
 		}
 	}
 };

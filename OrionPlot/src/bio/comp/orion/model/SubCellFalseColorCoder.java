@@ -13,7 +13,6 @@ public interface SubCellFalseColorCoder{
 			Color.GREEN, Color.BLUE, Color.CYAN, Color.MAGENTA, Color.PINK,};
 	public static SubCellFalseColorCoder DEFAULT_COLOR_CODER = new UsingArrayOfColors(DEFAULT_CODING);
 	Color colorForSubCell(int row, int cell, int subCell, int subCellValue);
-	int[] codesForValues();
 	
 	public static class UsingColorMap implements SubCellFalseColorCoder{
 		private Map<Integer, Color>_lookup;
@@ -31,7 +30,6 @@ public interface SubCellFalseColorCoder{
 			Integer sval = subCellValue;
 			return _lookup != null && _lookup.containsKey(sval) ? _lookup.get(sval) : Color.black;
 		}
-		@Override
 		public int[] codesForValues() {
 			
 			int [] values = new int[_lookup != null ? _lookup.keySet().size() : 0];
@@ -47,6 +45,9 @@ public interface SubCellFalseColorCoder{
 		private Color[] baseColors;
 		public UniqueColorIterable(Color[] base){
 			baseColors = base;
+		}
+		public UniqueColorIterable(){
+			this(BASE_COLORS);
 		}
 		
 		@Override
@@ -120,7 +121,6 @@ public interface SubCellFalseColorCoder{
 			return _colors != null && subCellValue < _colors.length ? _colors[subCellValue] : Color.BLACK;
 		}
 		
-		@Override
 		public int[] codesForValues(){
 			int[] values = new int[_colors.length];
 			for(int i = 0; i < values.length; ++i){

@@ -10,6 +10,6 @@ public interface ColorIndexConstants {
     static final String COLOR_TABLE_COLUMN_NAME = "Color";
     static final Class<?> INDEX_TABLE_COLUMN_CLASS = Integer.class;
     static final Class<?> COLOR_TABLE_COLUMN_CLASS = Color.class;
-    static final Class[] TABLE_COLUMN_CLASSES = new Class<?>[] { INDEX_TABLE_COLUMN_CLASS, COLOR_TABLE_COLUMN_CLASS };
+    static final Class<?>[] TABLE_COLUMN_CLASSES = new Class<?>[] { INDEX_TABLE_COLUMN_CLASS, COLOR_TABLE_COLUMN_CLASS };
     static final String[] TABLE_COLUMN_NAMES = new String[] { INDEX_TABLE_COLUMN_NAME, COLOR_TABLE_COLUMN_NAME };
 }

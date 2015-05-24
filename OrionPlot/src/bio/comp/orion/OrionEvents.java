@@ -51,6 +51,7 @@ public class OrionEvents implements OrionConstants {
 	public static final Object getEventSource(Map<String, Object> eventMap){
 		 return eventMap.get(STATUS_EVENT_SOURCE_KEY);
 	}
+	@SuppressWarnings("serial")
 	public static class OrionEventDialog extends JDialog{
 		Map<String, Object> eventMap;
 		private void completeConstruction(Map<String, Object> eventMap){

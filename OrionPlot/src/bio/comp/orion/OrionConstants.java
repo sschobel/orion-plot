@@ -1,9 +1,9 @@
 package bio.comp.orion;
+import java.util.logging.Logger;
+
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.eventbus.EventBus;
-
-import java.util.logging.Logger;
 
 public interface OrionConstants {
 

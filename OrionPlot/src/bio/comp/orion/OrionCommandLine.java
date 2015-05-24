@@ -3,28 +3,19 @@
  */
 package bio.comp.orion;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.awt.Color;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-
-
-
-
-import bio.comp.orion.model.MatrixReader;
-import bio.comp.orion.model.MatrixReaders;
-import bio.comp.orion.presenter.OrionModelPresenter;
-import bio.comp.orion.presenter.OrionSVGModelPresenter;
 
 import org.apache.batik.transcoder.Transcoder;
 import org.apache.batik.transcoder.TranscoderException;
@@ -38,10 +29,13 @@ import org.apache.batik.transcoder.image.TIFFTranscoder;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
 import org.w3c.dom.svg.SVGDocument;
 
-import com.google.common.base.Function;
+import bio.comp.orion.model.MatrixReader;
+import bio.comp.orion.model.MatrixReaders;
+import bio.comp.orion.presenter.OrionModelPresenter;
+import bio.comp.orion.presenter.OrionSVGModelPresenter;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.StandardSystemProperty;
-import com.google.common.collect.*;
 
 /**
  * @author roberts
@@ -67,7 +61,18 @@ public class OrionCommandLine {
 		}
 		
 		public File getOutputFile(){
-			return outputPath != null ? new File(outputPath) : null;
+			File outputFile = new File(outputPath);
+			if(outputFile != null && !outputFile.isAbsolute()){
+				File inputFile = getInputFile();
+				String sep = StandardSystemProperty.FILE_SEPARATOR.value();
+				String path = inputFile.getParent() + 
+						sep
+                        + outputPath;
+				return new File(path);
+			}
+			else{
+				return outputFile;
+			}
 		}
 		/**
 		 * @param inputPath
@@ -82,17 +87,7 @@ public class OrionCommandLine {
 		 */
 		public String getOutputPath() {
 			File outputFile = getOutputFile();
-			if(outputFile != null && !outputFile.isAbsolute()){
-				File inputFile = getInputFile();
-				String sep = StandardSystemProperty.FILE_SEPARATOR.value();
-				String path = inputFile.getParent() + 
-						sep
-                        + outputPath;
-				return path;
-			}
-			else{
-				return outputPath;
-			}
+			return outputFile != null ? outputFile.getAbsolutePath() : null;
 		}
 
 		/**
@@ -185,6 +180,7 @@ public class OrionCommandLine {
 		Option outputs = new OutputOption();
 		Option[] options = new Option[] { formats, outputs };
 		Argument inputArgs = new InputArgument("inputs");
+		@SuppressWarnings("serial")
 		Map<String, Transcoder> typeTranscoders = new HashMap<String, Transcoder>(){{
 			TranscodingHints imghints = new TranscodingHints();
 			imghints.put(ImageTranscoder.KEY_BACKGROUND_COLOR, Color.white);
