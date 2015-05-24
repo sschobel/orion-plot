@@ -60,6 +60,7 @@ import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.svg2svg.SVGTranscoder;
+import org.w3c.dom.svg.SVGDocument;
 
 import bio.comp.orion.OrionConstants;
 import bio.comp.orion.OrionEvents;
@@ -69,6 +70,8 @@ import bio.comp.orion.model.MatrixReaders;
 import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.model.Preference;
 import bio.comp.orion.model.SubCellFalseColorCoder;
+import bio.comp.orion.presenter.OrionModelPresenter;
+import bio.comp.orion.presenter.OrionSVGModelPresenter;
 import bio.comp.orion.ui.ColorIndexTableModel.ColorModelEvent;
 import bio.comp.orion.ui.ColorIndexTableModel.ColorModelListener;
 import bio.comp.orion.ui.ColorIndexTableModel.ReplacementStrategy;
@@ -584,9 +587,13 @@ public class OrionFrame extends JFrame {
 				Preference.flush(prefs);
 				try {
 					SVGTranscoder tcoder = new SVGTranscoder();
-
+			OrionModelPresenter<SVGDocument> presenter = new OrionSVGModelPresenter(
+					orionPlotPanel.getModel());
+			presenter.setShowLegend(true);
+			SVGDocument doc = OrionSVGModelPresenter.createEmptySVGDocument();
+			presenter.present(doc);
 					tcoder.transcode(
-							new TranscoderInput(orionPlotPanel.getDocument()),
+							new TranscoderInput(doc),
 							new TranscoderOutput(new FileWriter(outputfile)));
 				} catch (TranscoderException e) {
 					// TODO Auto-generated catch block
