@@ -1,6 +1,7 @@
 package bio.comp.orion.presenter;
 
 import java.awt.Color;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
 
@@ -21,10 +22,11 @@ import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.MatrixHeader;
 import bio.comp.orion.model.OrionModel;
 import bio.comp.orion.presenter.OrionModelPresenter.BaseOrionModelPresenter;
+import bio.comp.orion.presenter.OrionModelPresenter.BaseOrionModelPresenter.LegendMetrics;
 import bio.comp.orion.ui.SVGDocumentUpdater;
 
 public class OrionSVGModelPresenter extends
-BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
+		BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
 	static String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 
 	public static SVGDocument createEmptySVGDocument() {
@@ -35,8 +37,44 @@ BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
 		return (SVGDocument) doc;
 	}
 
+
 	public OrionSVGModelPresenter(final OrionModel model) {
 		_model = model;
+	}
+
+	public static Point2D pointByTranslatingPoint(Point2D pt, double dx,
+			double dy) {
+		return new Point2D.Double(pt.getX() + dx, pt.getY() + dy);
+	}
+	public static Element createSVGRect(final SVGDocument document,
+			Rectangle2D r, Color fillC) {
+		return createSVGRect(document, r, Color.BLACK,fillC);
+
+	}
+
+	public static Element createSVGRect(final SVGDocument document,
+			Rectangle2D r, Color strokeC, Color fillC) {
+		final Element rect = document.createElementNS(svgNS, "rect");
+		rect.setAttributeNS(null, "x", Double.toString(r.getX()));
+		rect.setAttributeNS(null, "y", Double.toString(r.getY()));
+		rect.setAttributeNS(null, "width", Double.toString(r.getWidth()));
+		rect.setAttributeNS(null, "height", Double.toString(r.getHeight()));
+
+		if(fillC != null){
+            rect.setAttributeNS(null, "fill", Colors.toHexString(fillC));
+		}
+		if(strokeC != null){
+             rect.setAttributeNS(null, "stroke", Colors.toHexString(strokeC));
+		}
+		return rect;
+	}
+
+	public static Element createSVGLabel(final SVGDocument document,
+			Point2D origin, String text, Color rc) {
+		final Element label = SVGUtilities.createText(document,
+				(float) origin.getX(), (float) origin.getY(), text);
+		label.setAttributeNS(null, "stroke", Colors.toHexString(rc));
+		return label;
 	}
 
 	@Override
@@ -61,14 +99,10 @@ BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
 			public void iterate(final int idx, final Rectangle2D frame,
 					final String labelText) {
 
-				final Element label = SVGUtilities.createText(document,
+				labelG.appendChild(createSVGLabel(document, new Point2D.Double(
 						(float) frame.getMaxX(),
-						(float) (frame.getMaxY() - (frame.getHeight() / 4.0)),
-						labelText);
-
-				label.setAttributeNS(null, "stroke", "black");
-
-				labelG.appendChild(label);
+						(float) (frame.getMaxY() - (frame.getHeight() / 4.0))),
+						labelText, Color.BLACK));
 			}
 		});
 		final Element cellG = document.createElementNS(svgNS, "g");
@@ -82,15 +116,11 @@ BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
 			final Rectangle2D cellRect = getCellBounds(0, i);
 			final MatrixHeader header = _model.getMatrixHeader(i);
 			if (header != null) {
-				final Element label = SVGUtilities
-						.createText(
-								document,
-								(float) (cellRect.getMinX() + (cellRect
-										.getWidth() / 4.0f)),
-								(float) (cellRect.getMinY() - (getVerticalInset() / 4.0)),
-								header.getName());
-				label.setAttributeNS(null, "stroke",
-						Colors.toHexString(header.getColor()));
+				Point2D origin = new Point2D.Double(
+						(cellRect.getMinX() + (cellRect.getWidth() / 4.0f)),
+						(cellRect.getMinY() - (getVerticalInset() / 4.0)));
+				final Element label = createSVGLabel(document, origin,
+						header.getName(), header.getColor());
 				headerG.appendChild(label);
 			}
 		}
@@ -105,21 +135,43 @@ BaseOrionModelPresenter<SVGDocument> implements SVGDocumentUpdater {
 					final Rectangle2D r = cellRects.get(i);
 					final Color rc = (i < colors.size()) ? colors.get(i)
 							: Color.PINK;
-					final Element rect = document
-							.createElementNS(svgNS, "rect");
-					rect.setAttributeNS(null, "x", Double.toString(r.getX()));
-					rect.setAttributeNS(null, "y", Double.toString(r.getY()));
-					rect.setAttributeNS(null, "width",
-							Double.toString(r.getWidth()));
-					rect.setAttributeNS(null, "height",
-							Double.toString(r.getHeight()));
-
-					rect.setAttributeNS(null, "fill", Colors.toHexString(rc));
-					rect.setAttributeNS(null, "stroke", "black");
-					cellG.appendChild(rect);
+					cellG.appendChild(createSVGRect(document, r, rc));
 				}
 			}
 		});
+
+		if (_showLegend) {
+			final Element legendG = document.createElementNS(svgNS, "g");
+			Rectangle2D matrixBounds = getMatrixBounds(INCLUDE_PADDING);
+			final double dy = LegendMetrics.NEXT_Y, dx = LegendMetrics.NEXT_X;
+			Point2D legendOrigin = new Point2D.Double(matrixBounds.getMinX(),
+					matrixBounds.getMaxY() + dy);
+			legendG.appendChild(createSVGLabel(document, legendOrigin, "Legend", Color.BLACK));
+			final Point2D start = pointByTranslatingPoint(legendOrigin, 0, 25);
+			forEachColorMapEntry(new ColorMapIterator() {
+
+				@Override
+				public void iterate(int idx, Object key, Color value) {
+					Point2D rowOrigin = pointByTranslatingPoint(start, 0, dy * idx);
+					Point2D textOrigin = pointByTranslatingPoint(rowOrigin, LegendMetrics.PAD, 15);
+					Point2D colorOrigin = pointByTranslatingPoint(rowOrigin,
+							dx, 0);
+					Element label = createSVGLabel(document, textOrigin,
+							key.toString(), Color.BLACK);
+					Element color = createSVGRect(document,
+							new Rectangle2D.Double(colorOrigin.getX(),
+									colorOrigin.getY(),
+									LegendMetrics.CELL_WIDTH,
+									LegendMetrics.CELL_HEIGHT), value);
+
+					legendG.appendChild(label);
+					legendG.appendChild(color);
+
+				}
+			});
+			svgRoot.appendChild(legendG);
+		}
+
 	}
 
 	protected void registerListeners(final SVGDocument _document) {

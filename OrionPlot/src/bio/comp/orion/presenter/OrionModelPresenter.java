@@ -5,6 +5,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import bio.comp.orion.model.DataLine;
 import bio.comp.orion.model.OrionModel;
@@ -22,11 +23,20 @@ public interface OrionModelPresenter<P> {
 		public void iterate(int idx, Rectangle2D frame, String labelText);
 	}
 
+	public interface ColorMapIterator {
+		public void iterate(int idx, Object key, Color value);
+	}
+
 	public abstract static class BaseOrionModelPresenter<P> implements
 			OrionModelPresenter<P> {
 		private static final int DEFAULT_LABEL_GAP = 5;
 		private int _labelGap = DEFAULT_LABEL_GAP;
 		protected OrionModel _model;
+		protected boolean _showLegend = false;
+
+		public void setShowLegend(boolean b) {
+			_showLegend = b;
+		}
 
 		public double getPlotElementPad() {
 
@@ -51,6 +61,14 @@ public interface OrionModelPresenter<P> {
 			}
 		}
 
+		protected void forEachColorMapEntry(ColorMapIterator iter) {
+			int idx = 0;
+			for (Map.Entry<Integer, Color> e : _model.getColorMap().entrySet()) {
+				iter.iterate(idx++, e.getKey(), e.getValue());
+			}
+
+		}
+
 		public int maxCountOfElementsInAllRows() {
 			int maxcount = 0;
 			int matrixLen = _model.getDataMatrixEntryCount();
@@ -68,10 +86,11 @@ public interface OrionModelPresenter<P> {
 				int colcount = uniform_width ? maxCountOfElementsInAllRows()
 						: countElementsInRow(row);
 				Rectangle2D first = getCellBounds(row, 0);
-				Rectangle2D last = getCellBounds(row, colcount-1);
+				Rectangle2D last = getCellBounds(row, colcount - 1);
 				double w = last.getMaxX() - first.getMinX();
 				double h = Math.max(first.getHeight(), last.getHeight());
-				return new Rectangle2D.Double(first.getMinX(), first.getMinY(), w, h);
+				return new Rectangle2D.Double(first.getMinX(), first.getMinY(),
+						w, h);
 			} else {
 				return null;
 			}
@@ -81,19 +100,19 @@ public interface OrionModelPresenter<P> {
 			return _labelGap;
 		}
 
-
 		public double getBlockWidth(int col) {
 			return _model.getMatrixHeader(col).getWidth();
 		}
 
-
 		public double getBlockHeight(int col) {
 			return _model.getMatrixHeader(col).getHeight();
 		}
-		public double getBlockHeight(){
+
+		public double getBlockHeight() {
 			return getBlockHeight(-1);
 		}
-		public double getBlockWidth(){
+
+		public double getBlockWidth() {
 			return getBlockWidth(-1);
 		}
 
@@ -116,8 +135,9 @@ public interface OrionModelPresenter<P> {
 			Rectangle2D rowBounds = getRowBounds(bigRow, false);
 			Rectangle2D lastRow = getRowBounds(height - 1, false);
 			Rectangle2D firstRow = getRowBounds(0, false);
-			
-			return new Rectangle2D.Double(firstRow.getMinX(), firstRow.getMinY(), rowBounds.getMaxX(), lastRow.getMaxY());
+
+			return new Rectangle2D.Double(firstRow.getMinX(),
+					firstRow.getMinY(), rowBounds.getMaxX(), lastRow.getMaxY());
 		}
 
 		private double vInset = 15.0;
@@ -140,10 +160,33 @@ public interface OrionModelPresenter<P> {
 			return new Rectangle2D.Double(matrixBounds.getMaxX(),
 					matrixBounds.getMinY(), 400.0, matrixBounds.getHeight());
 		}
+	protected interface LegendMetrics {
+		static final double PAD = 5;
+		static final double CELL_HEIGHT = 20;
+		static final double CELL_WIDTH = 20;
+		static final double NEXT_X = CELL_WIDTH + (PAD * 2);
+		static final double NEXT_Y = CELL_HEIGHT + PAD;
+	}
+
+		protected Rectangle2D getLegendBounds(){
+			Rectangle2D mbounds = getMatrixBounds();
+			return new Rectangle2D.Double(
+					mbounds.getMinX(), 
+					mbounds.getMaxY() + LegendMetrics.PAD, 
+					LegendMetrics.NEXT_X * 2,
+					(LegendMetrics.NEXT_Y * (_model.getColorMap().size() + 3) +
+							LegendMetrics.PAD * 2));			
+		}
 
 		protected Rectangle2D getGraphBounds() {
-			Rectangle2D matlabBounds = getMatrixBounds().createUnion(getLabelBounds());
-			matlabBounds.add(matlabBounds.getMaxX() + getHorizontalInset(), matlabBounds.getMaxY() + getVerticalInset());
+			Rectangle2D matlabBounds = getMatrixBounds().createUnion(
+					getLabelBounds());
+			if (_showLegend) {
+				matlabBounds = matlabBounds.createUnion(getLegendBounds());
+
+			}
+			matlabBounds.add(matlabBounds.getMaxX() + getHorizontalInset(),
+					matlabBounds.getMaxY() + getVerticalInset());
 			return matlabBounds;
 		}
 
@@ -151,10 +194,11 @@ public interface OrionModelPresenter<P> {
 			double w = getBlockWidth(col), h = getBlockHeight(col);
 			double y = (h + getPlotElementPad()) * row;
 			double x = getPlotElementPad() * col;
-			for(int i = col-1; i >= 0; i--){
+			for (int i = col - 1; i >= 0; i--) {
 				x += (getBlockWidth(i) + getPlotElementPad());
 			}
-			return new Rectangle2D.Double(x + getHorizontalInset(), y + getVerticalInset(), w, h);
+			return new Rectangle2D.Double(x + getHorizontalInset(), y
+					+ getVerticalInset(), w, h);
 		}
 
 		protected List<Color> colorsForCell(int row, int cell) {
@@ -207,7 +251,7 @@ public interface OrionModelPresenter<P> {
 
 		public void overAllCells(CellIterator iter) {
 			Point2D cellOrigin = new Point2D.Double();
-			
+
 			int matrixLen = _model.getDataMatrixEntryCount();
 			for (int row_i = 0; iter != null && row_i < matrixLen; row_i++) {
 				DataLine line = _model.getDataMatrixEntry(row_i);
@@ -224,4 +268,7 @@ public interface OrionModelPresenter<P> {
 			}
 		}
 	}
+
+	void setShowLegend(boolean b);
+
 }

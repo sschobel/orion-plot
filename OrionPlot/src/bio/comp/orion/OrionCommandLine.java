@@ -270,6 +270,7 @@ public class OrionCommandLine {
 					.readerForFile(conversionCommand.inputPath);
 			OrionModelPresenter<SVGDocument> presenter = new OrionSVGModelPresenter(
 					reader.getModel());
+			presenter.setShowLegend(true);
 			SVGDocument doc = OrionSVGModelPresenter.createEmptySVGDocument();
 			presenter.present(doc);
 			Transcoder trans = typeTranscoders.get(conversionCommand.getOutputFormat());
