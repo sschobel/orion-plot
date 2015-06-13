@@ -105,7 +105,8 @@ public class MatrixReaders {
 		@Override
 		public OrionModel getModel() {
 
-			 return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),getColorMap());
+			return new OrionModel.DefaultOrionModel(getMatrix(), getHeaders(),
+					getColorMap());
 		}
 
 		private static final String COLUMN_PREFIX = "#headers:";
@@ -119,38 +120,61 @@ public class MatrixReaders {
 				if (line.startsWith(COLUMN_PREFIX)) {
 					// read columns
 					String colNameStr = line.substring(COLUMN_PREFIX.length());
-					List<String> cols = Splitter.on(DECL_SEPARATOR)
-							.omitEmptyStrings().trimResults()
-							.splitToList(colNameStr);
-					List<MatrixHeader> headerList = Lists.transform(cols,
-							MatrixHeaders.fromString);
-					_headers.addAll(headerList);
+					try {
+						List<String> cols = Splitter.on(DECL_SEPARATOR)
+								.omitEmptyStrings().trimResults()
+								.splitToList(colNameStr);
+						List<MatrixHeader> headerList = Lists.transform(cols,
+								MatrixHeaders.fromString);
+						_headers.addAll(headerList);
+					} catch (IllegalArgumentException iae) {
+						errors.log(Level.INFO,
+								String.format(
+										"Failed to parse column header %s",
+										colNameStr), iae);
+					}
 
 				}
-				if (line.startsWith(PALETE_PREFIX) || line.startsWith(PALETE_PREFIX_ALT)) {
+				if (line.startsWith(PALETE_PREFIX)
+						|| line.startsWith(PALETE_PREFIX_ALT)) {
 					String palleteDeclStr = line.substring(PALETE_PREFIX
 							.length());
 					Splitter declSplitter = Splitter.on("=").trimResults();
-					Map<String, String> palleteMap = Splitter
-							.on(DECL_SEPARATOR).omitEmptyStrings()
-							.trimResults().withKeyValueSeparator(declSplitter)
-							.split(palleteDeclStr);
-					for(Map.Entry<String, String>entry : palleteMap.entrySet()){
-						try{
-							Integer lookup = Integer.valueOf(entry.getKey());
-							Color   color  = Colors.fromHexString(entry.getValue());
-							_palette.put(lookup, color);
-						}catch(NumberFormatException nfe){
-							errors.log(Level.INFO,
-									String.format("Failed to convert value %s into Integer", entry.getKey()), 
-									nfe);
-						}catch(RuntimeException re){
-							errors.log(Level.INFO,
-									String.format("Failed to convert value %s into Color", entry.getValue()), 
-									re);
+					try {
+						Map<String, String> palleteMap = Splitter
+								.on(DECL_SEPARATOR).omitEmptyStrings()
+								.trimResults()
+								.withKeyValueSeparator(declSplitter)
+								.split(palleteDeclStr);
+						for (Map.Entry<String, String> entry : palleteMap
+								.entrySet()) {
+							try {
+								Integer lookup = Integer
+										.valueOf(entry.getKey());
+								Color color = Colors.fromHexString(entry
+										.getValue());
+								_palette.put(lookup, color);
+							} catch (NumberFormatException nfe) {
+								errors.log(
+										Level.INFO,
+										String.format(
+												"Failed to convert value %s into Integer",
+												entry.getKey()), nfe);
+							} catch (RuntimeException re) {
+								errors.log(
+										Level.INFO,
+										String.format(
+												"Failed to convert value %s into Color",
+												entry.getValue()), re);
+							}
 						}
+					} catch (IllegalArgumentException iae) {
+						errors.log(Level.INFO, String.format(
+								"Failed to parse pallette %s", palleteDeclStr),
+								iae);
+
 					}
-					
+
 				}
 				return null;
 			}
@@ -189,15 +213,13 @@ public class MatrixReaders {
 
 				for (int i = 0; i < lines.size(); ++i) {
 					DataLine dl = readLineIntoMatrix(lines.get(i));
-					if(dl != null){
+					if (dl != null) {
 						matrix.add(dl);
 					}
 				}
 			}
 			return matrix.toArray(new DataLine[0]);
 		}
-
-		
 
 		protected DataLine[] readFileIntoMatrix(File file,
 				List<MatrixHeader> _headers) {
@@ -226,7 +248,7 @@ public class MatrixReaders {
 					}
 				}
 			}
-			
+
 			return readLinesIntoMatrix(lines);
 
 		}

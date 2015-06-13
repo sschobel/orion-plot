@@ -126,11 +126,13 @@ public class OrionFrame extends JFrame {
 										InputEvent.META_DOWN_MASK));
 							}
 						});
+						/*
 						add(new JMenuItem("save"){
 							{
 								setMnemonic(KeyEvent.VK_S);
 							}
 						});
+						*/
 						add(new JMenuItem("Reload") {
 							{
 								setAction(reloadFileAction);

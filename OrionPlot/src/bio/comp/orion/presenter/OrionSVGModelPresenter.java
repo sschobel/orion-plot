@@ -135,7 +135,10 @@ public class OrionSVGModelPresenter extends
 					final Rectangle2D r = cellRects.get(i);
 					final Color rc = (i < colors.size()) ? colors.get(i)
 							: Color.PINK;
-					cellG.appendChild(createSVGRect(document, r, rc));
+					final Integer val = (i < vals.size()) ? vals.get(i) : 1;
+                    Element re = createSVGRect(document, r, rc);
+                    re.setAttributeNS(null, "id", val.toString());
+					cellG.appendChild(re);
 				}
 			}
 		});
@@ -163,7 +166,7 @@ public class OrionSVGModelPresenter extends
 									colorOrigin.getY(),
 									LegendMetrics.CELL_WIDTH,
 									LegendMetrics.CELL_HEIGHT), value);
-
+					color.setAttributeNS(null, "id", key.toString());
 					legendG.appendChild(label);
 					legendG.appendChild(color);
 
