@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
+  <info organisation="" module="OrionPlot" revision="0.5" status="integration" publication="20160206114824">
+    <description/>
+  </info>
+  <configurations>
+    <conf name="archives" visibility="public" description="Configuration for archive artifacts."/>
+    <conf name="compile" visibility="private" description="Compile classpath for source set 'main'."/>
+    <conf name="default" visibility="public" description="Configuration for default artifacts." extends="runtime"/>
+    <conf name="runtime" visibility="private" description="Runtime classpath for source set 'main'." extends="compile"/>
+    <conf name="testCompile" visibility="private" description="Compile classpath for source set 'test'." extends="compile"/>
+    <conf name="testRuntime" visibility="private" description="Runtime classpath for source set 'test'." extends="runtime,testCompile"/>
+  </configurations>
+  <publications>
+    <artifact name="OrionPlot" type="jar" ext="jar" conf="archives,runtime"/>
+  </publications>
+  <dependencies>
+    <dependency org="org.json" name="json" rev="20141113" conf="compile-&gt;default"/>
+    <dependency org="xml-apis" name="xml-apis" rev="1.0.b2" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="fop" rev="1.1" conf="compile-&gt;default"/>
+    <dependency org="org.apache.avalon.framework" name="avalon-framework-api" rev="4.3.1" conf="compile-&gt;default"/>
+    <dependency org="org.apache.avalon.framework" name="avalon-framework-impl" rev="4.3.1" conf="compile-&gt;default"/>
+    <dependency org="com.google.guava" name="guava" rev="18.0" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-util" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-transcoder" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-ext" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-awt-util" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-bridge" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-dom" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-svggen" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-svg-dom" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-gvt" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-parser" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-codec" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-xml" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-script" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-anim" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-js" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-rasterizer" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-swing" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-extension" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-gui-util" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-ttf2svg" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="org.apache.xmlgraphics" name="batik-svgpp" rev="1.7" conf="compile-&gt;default"/>
+    <dependency org="junit" name="junit" rev="4.+" conf="testCompile-&gt;default"/>
+  </dependencies>
+</ivy-module>
