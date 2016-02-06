@@ -3,6 +3,26 @@ buildDir 'bin'
 sourceCompatibility = 1.6
 version = '0.5'
 
+String stringify(Object o){
+  if (o == null){
+    return 'null'
+  } 
+  if (o.properties == null){
+    return 'no groovy properties'
+  }
+  def kvs =  o.properties.collect{ k,v ->
+     "${k} : ${v}"
+  }
+  def stringy=kvs.join('\n')
+  println "STRING: ${stringy}"
+  return stringy
+}
+
+void dumpObject(Object o){
+  println "DUMP: ${stringify(o)}" 
+}
+
+
 def batik_artifacts = [
 	'batik-' : [ 
 	'util', 
@@ -74,3 +94,6 @@ task fullJar(type: Copy, dependsOn:jar) {
 	into jar.destinationDir
 }
 
+task showJavaHome {
+  println "${System.getProperty('java.home')}/jre/lib/rt.jar"
+}
