@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 buildDir 'bin'
-sourceCompatibility = 1.6
+sourceCompatibility = 1.7
 version = '0.5'
 
 String stringify(Object o){
@@ -75,7 +75,7 @@ dependencies {
 	batik_artifacts.each() { prefix, suffixes ->
 		suffixes.each() { suffix ->
 			def artname = "$prefix$suffix"
-			println "getting artifact $artname"
+			//println "getting artifact $artname"
 			compile group: 'org.apache.xmlgraphics', name: artname, version: '1.7'
 		}
 	}	
@@ -88,6 +88,18 @@ sourceSets {
 			//srcDir 'src'
 		}
 	}
+}
+
+test {
+// listen to events in the test execution lifecycle
+  beforeTest { descriptor ->
+     logger.lifecycle("Running test: " + descriptor)
+  }
+
+  // listen to standard out and standard error of the test JVM(s)
+  onOutput { descriptor, event ->
+     logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+  }
 }
 
 jar {
@@ -106,6 +118,30 @@ task fullJar(type: Copy, dependsOn:jar) {
 	into jar.destinationDir
 }
 
-task showJavaHome {
-  println "${System.getProperty('java.home')}/jre/lib/rt.jar"
+String getJavaHome(){
+  return "${System.getProperty('java.home')}"
 }
+
+String getJava(){
+  return [ getJavaHome(), 'bin' , 'java' ].join(File.separator) 
+}
+
+task showJavaHome {
+  description "Displays the java home directory used to execute this gradle build"
+  doLast{
+    println getJavaHome()
+  }  
+}
+
+task runOrionGUI(type: JavaExec, dependsOn: jar) {
+  description = 'Run OrionPlot GUI'
+  classpath = sourceSets.main.runtimeClasspath
+
+  main = 'bio.com.orion.OrionLauncher'
+
+  // arguments to pass to the application
+  //args 'appArg1'
+  doFirst {
+    println "running ${getJava()} -jar '${jar.archivePath}'"
+  } 
+} 

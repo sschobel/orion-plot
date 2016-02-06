@@ -48,7 +48,10 @@ public class OrionLauncher {
 						String previousSessionFile = Preference.PREVIOUS_SESSION_PLOT.getPreference(prefs, String.class);
 						if(previousSessionFile != null){
 							File file = new File(previousSessionFile);
-							frame.openFile(file);
+              if(file != null){
+                frame.openFile(file);
+              }
+
 						}
 					}
 				} catch (Exception e) {
